@@ -1,0 +1,320 @@
+# Frequently Asked Questions
+
+Common questions about Myra.
+
+## General
+
+### What is Myra?
+
+Myra is a minimal systems programming language, inspired by Niklaus Wirth's Oberon, that compiles to native executables via C++23. It combines Pascal's readability with seamless C++ interoperability.
+
+### Why another language?
+
+Most Pascal variants have grown complex over decades. Myra strips away that complexity while adding modern C++ integration. The result: readable code with access to the entire C/C++ ecosystem.
+
+### How does Myra compare to Delphi/FreePascal?
+
+| Aspect | Myra | Delphi/FreePascal |
+|--------|------|-------------------|
+| Keywords | 45 | 60+ |
+| Classes | No (records + extension) | Yes |
+| Generics | No (use C++) | Yes |
+| C++ interop | Native | Via headers/DLLs |
+| Build system | Zig | IDE/Make |
+| Target | C++23 | Native |
+
+### Is Myra production-ready?
+
+Myra 1.0 is suitable for projects where you value simplicity and C++ access. The language is stable, and the release is fully self-contained — everything you need (Zig compiler, LLDB debugger, raylib, standard library) is bundled.
+
+### What's the license?
+
+Apache License 2.0. Free for commercial and personal use.
+
+## Language
+
+### Why no classes?
+
+Records with type extension provide inheritance without the complexity of classes. Methods bind to types explicitly via `var Self` parameter. This is simpler and equally powerful for most use cases.
+
+```myra
+type
+  TShape = record
+    X: INTEGER;
+    Y: INTEGER;
+  end;
+
+  TCircle = record(TShape)
+    Radius: INTEGER;
+  end;
+
+method Draw(var Self: TCircle);
+begin
+  // ...
+end;
+```
+
+### Why no generics?
+
+Generics add significant complexity. Myra provides alternatives:
+
+1. **POINTER** for type-agnostic code
+2. **C++ templates** via interop
+3. **Specific types** (often clearer anyway)
+
+```myra
+// Option 1: Use POINTER
+routine Sort(const AData: POINTER; const ACount: INTEGER);
+
+// Option 2: Use C++ templates
+#startcpp header
+template<typename T>
+void Sort(std::vector<T>& data) { ... }
+#endcpp
+```
+
+### Why explicit Self parameter?
+
+It makes method binding explicit and visible. No hidden `this` pointer, no magic.
+
+```myra
+method Reset(var Self: TCounter);
+begin
+  Self.Value := 0;  // Clear what's being modified
+end;
+```
+
+### Why 64-bit types only?
+
+Modern systems are 64-bit. INTEGER is `int64_t`, FLOAT is `double`. For smaller types, use C++ directly:
+
+```myra
+var
+  small: int32_t;
+  byte: uint8_t;
+```
+
+### Can I use 32-bit integers?
+
+Yes, via C++ types:
+
+```myra
+var
+  Value: int32_t;
+  Flags: uint32_t;
+```
+
+### How do I do string formatting?
+
+Use `{}` placeholders:
+
+```myra
+Console.PrintLn('Name: {}, Age: {}', Name, Age);
+Console.PrintLn('Result: {}', X + Y);
+```
+
+## Practical
+
+### How do I read/write files?
+
+Use C++ file I/O:
+
+```myra
+#include_header '<fstream>'
+
+#startcpp header
+inline std::string ReadFile(const std::string& path) {
+    std::ifstream f(path);
+    return std::string((std::istreambuf_iterator<char>(f)),
+                        std::istreambuf_iterator<char>());
+}
+
+inline void WriteFile(const std::string& path, const std::string& content) {
+    std::ofstream f(path);
+    f << content;
+}
+#endcpp
+```
+
+### How do I use command line arguments?
+
+Use `ParamCount` and `ParamStr`:
+
+```myra
+var
+  I: INTEGER;
+begin
+  Console.PrintLn('Argument count: {}', ParamCount);
+  for I := 0 to ParamCount - 1 do
+    Console.PrintLn('  [{}] = {}', I, ParamStr(I));
+  end;
+end.
+```
+
+### How do I get the current time?
+
+Use C++ chrono:
+
+```myra
+#include_header '<chrono>'
+#include_header '<ctime>'
+
+#startcpp header
+inline std::string GetCurrentTime() {
+    auto now = std::chrono::system_clock::now();
+    auto time = std::chrono::system_clock::to_time_t(now);
+    return std::ctime(&time);
+}
+#endcpp
+```
+
+### How do I generate random numbers?
+
+Use C++ random:
+
+```myra
+#include_header '<random>'
+
+#startcpp header
+inline int RandomInt(int min, int max) {
+    static std::mt19937 rng(std::random_device{}());
+    std::uniform_int_distribution<int> dist(min, max);
+    return dist(rng);
+}
+#endcpp
+```
+
+### Can I use my favorite C library?
+
+Yes. Include the header, link the library:
+
+```myra
+#include_header '<sqlite3.h>'
+#link 'sqlite3'
+
+begin
+  // Use sqlite3 functions directly
+end.
+```
+
+### How do I debug Myra programs?
+
+Myra includes a fully integrated debugger:
+
+1. Use `#optimization DEBUG` for debug builds
+2. Run `myra debug` to launch the interactive debugger
+3. Use debugger commands: `b` (breakpoint), `c` (continue), `n` (next), `s` (step into), `bt` (backtrace), `locals`, `p` (print)
+4. Use `#breakpoint` directives in code for automatic breakpoint generation
+5. For IDE integration, configure `lldb-dap.exe` (bundled in `bin/res/lldb/bin/`) in VS Code or other DAP-compatible IDEs
+
+### What IDE support exists?
+
+Currently: syntax highlighting for common editors. The language is simple enough that basic highlighting covers most needs. LSP support is planned.
+
+## Troubleshooting
+
+### "Unknown identifier" errors
+
+**Cause:** Using a symbol before declaring it, or not importing the module.
+
+**Solutions:**
+- Check spelling (identifiers are case-sensitive)
+- Ensure the module is imported
+- Declare before use
+
+### "Module not found" errors
+
+**Cause:** Compiler can't find the imported module file.
+
+**Solutions:**
+- Check filename matches module name
+- Use `#unit_path` to add search directories
+- Verify file exists
+
+### Linker errors ("undefined reference")
+
+**Cause:** Missing library or wrong function signature.
+
+**Solutions:**
+- Add `#link 'library'` directive
+- Add `#library_path` if needed
+- Check function signature matches
+
+### C++ compilation errors
+
+**Cause:** Invalid C++ in `#startcpp` blocks or passthrough.
+
+**Solutions:**
+- Check generated `.cpp` file
+- Verify C++ syntax
+- Ensure headers are included
+
+### "Cannot convert type" errors
+
+**Cause:** Type mismatch in assignment or parameter.
+
+**Solutions:**
+- Check types match exactly
+- Use explicit cast if needed
+- Use `AS` for type conversion
+
+### Runtime crashes
+
+**Common causes:**
+- NIL pointer dereference
+- Array out of bounds
+- Memory not allocated (forgot NEW)
+- Memory already freed (double DISPOSE)
+
+**Debug steps:**
+1. Build with `#optimization DEBUG`
+2. Add Console.PrintLn to narrow down location
+3. Check all pointers before use
+4. Verify array indices
+
+## Best Practices
+
+### When should I use Myra vs C++?
+
+**Use Myra for:**
+- Application structure
+- Business logic
+- Readable algorithms
+- Data types
+
+**Use C++ for:**
+- Performance-critical loops
+- System API calls
+- Template code
+- Existing library wrappers
+
+### How should I organize large projects?
+
+```
+project/
+├── src/
+│   ├── Main.myra          # Entry point
+│   ├── Core/
+│   │   ├── Types.myra     # Common types
+│   │   └── Utils.myra     # Utilities
+│   └── Features/
+│       ├── Feature1.myra
+│       └── Feature2.myra
+├── lib/                   # External libraries
+├── include/               # C++ headers
+└── build/                 # Output
+```
+
+### Should I use methods or routines?
+
+**Use methods when:**
+- Operating on a specific record type
+- Want dot notation: `Object.DoSomething()`
+- Building object-like abstractions
+
+**Use routines when:**
+- General purpose functions
+- Operating on multiple types
+- Utility functions
+
+*Myra™ — Pascal. Refined.*
