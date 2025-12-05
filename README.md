@@ -3,7 +3,6 @@
 ![Myra](media/logo.png)
 
 [![Chat on Discord](https://img.shields.io/discord/754884471324672040?style=for-the-badge)](https://discord.gg/tPWjMwK)
-[![Join Facebook Group](https://img.shields.io/badge/Facebook-JetPascal-blue?style=for-the-badge&logo=facebook)](https://www.facebook.com/groups/jetpascal)
 [![Follow on Bluesky](https://img.shields.io/badge/Bluesky-tinyBigGAMES-blue?style=for-the-badge&logo=bluesky)](https://bsky.app/profile/tinybiggames.com)
 
 A minimal systems programming language that compiles to native executables via C++23.
