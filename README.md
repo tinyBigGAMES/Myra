@@ -316,7 +316,7 @@ This means you can freely mix Myra and C++ code. No wrappers, no bindings, no FF
 
 ## License
 
-Myra is licensed under the **Apache License 2.0**. See [LICENSE](LICENSE) for details.
+Myra is licensed under the **Apache License 2.0**. See [LICENSE](https://github.com/tinyBigGAMES/Myra/tree/main?tab=License-1-ov-file#readme) for details.
 
 ## Links
 
