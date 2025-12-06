@@ -115,9 +115,6 @@ FALSE
 
 (* Multi-line
    comment *)
-
-{ Alternative
-  multi-line }
 ```
 
 ## Module Structure
