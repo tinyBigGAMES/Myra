@@ -458,6 +458,26 @@ const
   Epsilon: FLOAT = 0.0001;
 ```
 
+**Array constants:**
+
+Static arrays can be initialized using curly braces. The array type must be declared separately (not inline):
+
+```myra
+type
+  TMonthDays = ARRAY[1..12] OF INTEGER;
+  TMatrix3x3 = ARRAY[0..2, 0..2] OF FLOAT;
+
+const
+  DaysInMonth: TMonthDays = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+  Identity: TMatrix3x3 = {
+    {1.0, 0.0, 0.0},
+    {0.0, 1.0, 0.0},
+    {0.0, 0.0, 1.0}
+  };
+```
+
+**Note:** Regardless of the declared index range in Myra, the generated C++ uses 0-indexed arrays internally. When accessing array constants with non-zero-based indices, adjust accordingly.
+
 ### Variables
 
 **Module-level variables:**

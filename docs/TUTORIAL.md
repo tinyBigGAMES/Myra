@@ -38,11 +38,17 @@ Let's break this down:
 - `begin...end.` — The main program block (note the period at the end)
 - `Console.PrintLn('...')` — Prints text with a newline
 
-Create a project, build and run:
+Create a project and open in Myra Edit:
 
 ```
 myra init HelloWorld
 cd HelloWorld
+myra edit
+```
+
+Or build and run from command line:
+
+```
 myra build
 myra run
 ```

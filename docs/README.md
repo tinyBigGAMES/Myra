@@ -8,7 +8,8 @@ Myra is a minimal systems programming language, inspired by Niklaus Wirth's Ober
 
 - **Minimal by design** — 45 keywords, 9 types. No redundancy.
 - **C++ interoperability** — Mix Myra and C++ freely. No wrappers needed.
-- **Batteries included** — Zig compiler, LLDB debugger, raylib, all bundled.
+- **Batteries included** — Zig compiler, LLDB debugger, raylib, Myra Edit, all bundled.
+- **Myra Edit** — Full editor with syntax highlighting, IntelliSense, and debugging.
 - **Integrated debugger** — Source-level debugging with breakpoints and stepping.
 - **Type extension** — Record inheritance without class complexity.
 - **Methods** — Bind routines to types with explicit `Self` parameter.
@@ -32,7 +33,8 @@ Build and run:
 ```
 myra init HelloWorld
 cd HelloWorld
-myra build
+myra edit              # Open in Myra Edit (recommended)
+myra build             # Or build from command line
 myra run
 ```
 
@@ -43,7 +45,7 @@ myra run
 | [Quick Start](QUICK_START.md) | Get running in 5 minutes |
 | [Tutorial](TUTORIAL.md) | Guided learning path |
 | [Language Reference](LANGUAGE_REFERENCE.md) | Complete language specification |
-| [Standard Library](STANDARD_LIBRARY.md) | Console, System, Assertions, UnitTest |
+| [Standard Library](STANDARD_LIBRARY.md) | Console, System, Assertions, UnitTest, Geometry, Strings, Convert, Files, Paths, Maths, DateTime |
 | [C++ Interop](CPP_INTEROP.md) | Mixing Myra and C++ code |
 | [Build System](BUILD_SYSTEM.md) | Compilation, targets, optimization |
 | [Examples](EXAMPLES.md) | Real-world code samples |

@@ -2,7 +2,7 @@
 
 ![Myra](media/logo.png)
 
-[![Chat on Discord](https://img.shields.io/discord/754884471324672040?style=for-the-badge)](https://discord.gg/tPWjMwK)
+[![Discord](https://img.shields.io/discord/754884471324672040?style=for-the-badge&logo=discord&label=Discord)](https://discord.gg/tPWjMwK)
 [![Follow on Bluesky](https://img.shields.io/badge/Bluesky-tinyBigGAMES-blue?style=for-the-badge&logo=bluesky)](https://bsky.app/profile/tinybiggames.com)
 
 A minimal systems programming language that compiles to native executables via C++23.
@@ -25,19 +25,20 @@ begin
 end.
 ```
 
-## Key Features
+## ✨ Key Features
 
-- **Minimal by design** — 45 keywords, 9 types. No redundancy.
-- **C++ interoperability** — Mix Myra and C++ freely. No wrappers needed.
-- **Batteries included** — Zig compiler, LLDB debugger, raylib, all bundled.
-- **Integrated debugger** — Source-level debugging with breakpoints and stepping.
-- **Type extension** — Record inheritance without class complexity.
-- **Methods** — Bind routines to types with explicit `Self` parameter.
-- **Exception handling** — Built-in try/except/finally.
-- **Dynamic arrays** — SetLength/Len with automatic memory management.
-- **Unit testing** — Built-in TEST blocks for integrated testing.
+- ✨ **Minimal by design** — 45 keywords, 9 types. No redundancy.
+- 🔗 **C++ interoperability** — Mix Myra and C++ freely. No wrappers needed.
+- 📦 **Batteries included** — Zig compiler, LLDB debugger, raylib, Myra Edit, all bundled.
+- 🖥️ **Myra Edit** — Full editor with syntax highlighting, IntelliSense, and debugging.
+- 🐛 **Integrated debugger** — Source-level debugging with breakpoints and stepping.
+- 🧬 **Type extension** — Record inheritance without class complexity.
+- ⚙️ **Methods** — Bind routines to types with explicit `Self` parameter.
+- 🛡️ **Exception handling** — Built-in try/except/finally.
+- 📊 **Dynamic arrays** — SetLength/Len with automatic memory management.
+- 🧪 **Unit testing** — Built-in TEST blocks for integrated testing.
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
 
@@ -49,7 +50,7 @@ end.
 2. Extract to a folder (e.g., `C:\myra`)
 3. Add the `bin` folder to your PATH
 
-That's it! Everything is bundled — Zig compiler, LLDB debugger, raylib, and the standard library.
+That's it! Everything is bundled — Zig compiler, LLDB debugger, Myra Edit, raylib, and the standard library.
 
 Verify installation:
 ```bash
@@ -61,6 +62,16 @@ myra version
 ```bash
 myra init HelloWorld
 cd HelloWorld
+```
+
+**Option 1: Use Myra Edit (Recommended)**
+```bash
+myra edit
+```
+This opens your project in a fully-configured editor with IntelliSense, debugging, and build integration.
+
+**Option 2: Command Line**
+```bash
 myra build
 myra run
 ```
@@ -70,7 +81,7 @@ Output:
 Hello from Myra!
 ```
 
-## Language Overview
+## 📖 Language Overview
 
 ### Built-in Types
 
@@ -201,14 +212,14 @@ end;
 | `module lib Name` | Static library |
 | `module dll Name` | Dynamic/shared library |
 
-## Documentation
+## 📚 Documentation
 
 | Document | Description |
 |----------|-------------|
 | [Quick Start](docs/QUICK_START.md) | Get running in 5 minutes |
 | [Tutorial](docs/TUTORIAL.md) | Guided learning path |
 | [Language Reference](docs/LANGUAGE_REFERENCE.md) | Complete specification |
-| [Standard Library](docs/STANDARD_LIBRARY.md) | Console, System, Assertions, UnitTest |
+| [Standard Library](docs/STANDARD_LIBRARY.md) | Console, System, Assertions, UnitTest, Geometry, Strings, Convert, Files, Paths, Maths, DateTime |
 | [C++ Interop](docs/CPP_INTEROP.md) | Mixing Myra and C++ code |
 | [Build System](docs/BUILD_SYSTEM.md) | Compilation, targets, optimization |
 | [Examples](docs/EXAMPLES.md) | Real-world code samples |
@@ -216,7 +227,7 @@ end;
 | [Migration Guide](docs/MIGRATION.md) | Coming from Pascal/Delphi |
 | [Contributing](docs/CONTRIBUTING.md) | How to contribute |
 
-## What's Included
+## 📁 What's Included
 
 Everything you need is bundled in the release:
 
@@ -224,12 +235,20 @@ Everything you need is bundled in the release:
 myra/
 ├── bin/
 │   ├── myra.exe              # Myra compiler CLI
+│   ├── myralsp.exe           # Language Server (IntelliSense)
 │   └── res/
 │       ├── libs/
 │       │   ├── std/          # Standard library
-│       │   │   ├── Console.myra
-│       │   │   ├── System.myra
 │       │   │   ├── Assertions.myra
+│       │   │   ├── Console.myra
+│       │   │   ├── Convert.myra
+│       │   │   ├── DateTime.myra
+│       │   │   ├── Files.myra
+│       │   │   ├── Geometry.myra
+│       │   │   ├── Maths.myra
+│       │   │   ├── Paths.myra
+│       │   │   ├── Strings.myra
+│       │   │   ├── System.myra
 │       │   │   └── UnitTest.myra
 │       │   └── raylib/       # Raylib (static library)
 │       │       ├── include/
@@ -238,6 +257,11 @@ myra/
 │       │   └── bin/
 │       │       ├── lldb-dap.exe
 │       │       └── lldb.exe
+│       ├── edit/             # Myra Edit (portable VSCodium)
+│       │   ├── data/
+│       │   │   └── extensions/
+│       │   │       └── tinybiggames.myra-1.0.0/
+│       │   └── Edit.exe
 │       ├── runtime/          # C++ runtime support
 │       ├── zig/              # Bundled Zig compiler
 │       │   └── zig.exe
@@ -246,7 +270,7 @@ myra/
 └── docs/                     # Documentation
 ```
 
-## CLI Commands
+## 💻 CLI Commands
 
 ```bash
 myra init <n>              # Create new project
@@ -256,12 +280,44 @@ myra build                 # Compile and build
 myra run                   # Run the executable
 myra debug                 # Run with integrated debugger
 myra clean                 # Remove generated files
+myra edit                  # Open project in Myra Edit
 myra zig <args>            # Pass arguments to Zig
 myra version               # Show version
 myra help                  # Show help
 ```
 
-## Integrated Debugger
+## 🖥️ Myra Edit
+
+Myra includes a complete editor based on VSCodium:
+
+```bash
+myra edit
+```
+
+This opens your project in a fully-configured editor with:
+
+### IntelliSense Features
+- **Code Completion** — Keywords, types, and module symbols (e.g., `Console.PrintLn`)
+- **Signature Help** — Parameter hints with overload support (navigate with ↑/↓)
+- **Hover Information** — Symbol details on mouse hover
+- **Go to Definition** — Jump to symbol declarations (F12)
+- **Real-time Diagnostics** — Errors and warnings as you type
+- **Document Outline** — Navigate symbols in the current file
+
+### Debugging
+- **Breakpoints** — Click in the gutter or press F9
+- **Step Debugging** — Step over (F10), step into (F11), step out (Shift+F11)
+- **Variable Inspection** — Watch expressions and local variables
+- **Call Stack** — Full backtrace navigation
+- **Run/Debug Buttons** — Quick access in the editor title bar
+
+### Editor Features
+- **Syntax Highlighting** — Full Myra grammar with C++ passthrough support
+- **Code Snippets** — Quick templates for common patterns
+- **Build Integration** — Ctrl+Shift+B to build
+- **Keyboard Shortcuts** — F5 (debug), Ctrl+F5 (run without debugging)
+
+## 🐛 Integrated Debugger
 
 Myra includes a fully integrated source-level debugger:
 
@@ -285,7 +341,7 @@ myra debug
 
 Use `#breakpoint` directives in code for automatic breakpoints.
 
-## Build Directives
+## 🔧 Build Directives
 
 ```myra
 #optimization DEBUG        // Debug build
@@ -297,7 +353,7 @@ Use `#breakpoint` directives in code for automatic breakpoints.
 #breakpoint                // Set debugger breakpoint
 ```
 
-## Philosophy
+## 💡 Philosophy
 
 Myra follows a simple principle:
 
@@ -305,23 +361,28 @@ Myra follows a simple principle:
 
 This means you can freely mix Myra and C++ code. No wrappers, no bindings, no FFI complexity. Write readable Myra for your application logic, drop to C++ when you need it.
 
-## Requirements
+## 📋 Requirements
 
 - **Platform:** Windows (64-bit)
 - **Dependencies:** None! Everything is bundled in the release:
   - Zig compiler (C++ backend)
   - LLDB debugger (with DAP support for IDE integration)
+  - Myra Edit (customized VSCodium with syntax highlighting, IntelliSense, and integrated debugging)
   - Raylib (static library for game development)
-  - Standard library (Console, System, Assertions, UnitTest)
+  - Standard library (Console, System, Assertions, UnitTest, Geometry, Strings, Convert, Files, Paths, Maths, DateTime)
 
 ## License
 
 Myra is licensed under the **Apache License 2.0**. See [LICENSE](https://github.com/tinyBigGAMES/Myra/tree/main?tab=License-1-ov-file#readme) for details.
 
-## Links
+## 🔗 Links
 
-- **Website:** [myralang.org](https://myralang.org)
-- **Documentation:** [docs/](docs/README.md)
+- [Documentation](docs/README.md)
+- [Website](https://myralang.org)
+- [Discord](https://discord.gg/tPWjMwK)
+- [Bluesky](https://bsky.app/profile/tinybiggames.com)
+- [YouTube](https://youtube.com/tinyBigGAMES)
+
 
 ---
 

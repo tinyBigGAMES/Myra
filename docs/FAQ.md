@@ -117,24 +117,35 @@ Console.PrintLn('Result: {}', X + Y);
 
 ### How do I read/write files?
 
-Use C++ file I/O:
+Use the Files module for file system operations and file I/O:
 
 ```myra
-#include_header '<fstream>'
+import Files;
 
-#startcpp header
-inline std::string ReadFile(const std::string& path) {
-    std::ifstream f(path);
-    return std::string((std::istreambuf_iterator<char>(f)),
-                        std::istreambuf_iterator<char>());
-}
-
-inline void WriteFile(const std::string& path, const std::string& content) {
-    std::ofstream f(path);
-    f << content;
-}
-#endcpp
+var
+  F: Files.TTextFile;
+  Line: STRING;
+begin
+  // Reading a text file
+  Files.AssignTextFile(F, 'data.txt');
+  Files.ResetTextFile(F);
+  while not Files.EofTextFile(F) do
+    Files.ReadLnTextFile(F, Line);
+    Console.PrintLn(Line);
+  end;
+  Files.CloseTextFile(F);
+  
+  // File system operations
+  if Files.FileExists('config.txt') then
+    Console.PrintLn('Config found');
+  end;
+  
+  Files.CreateDir('output');
+  Files.DeleteFile('temp.txt');
+end.
 ```
+
+See [Standard Library - Files](STANDARD_LIBRARY.md#files) for complete documentation.
 
 ### How do I use command line arguments?
 
@@ -153,36 +164,40 @@ end.
 
 ### How do I get the current time?
 
-Use C++ chrono:
+Use the DateTime module:
 
 ```myra
-#include_header '<chrono>'
-#include_header '<ctime>'
+import DateTime;
 
-#startcpp header
-inline std::string GetCurrentTime() {
-    auto now = std::chrono::system_clock::now();
-    auto time = std::chrono::system_clock::to_time_t(now);
-    return std::ctime(&time);
-}
-#endcpp
+var
+  Now: DateTime.TDateTime;
+begin
+  Now := DateTime.Now();
+  Console.PrintLn(DateTime.FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
+  Console.PrintLn('Year: {}', DateTime.YearOf(Now));
+  Console.PrintLn('Month: {}', DateTime.MonthOf(Now));
+  Console.PrintLn('Day: {}', DateTime.DayOf(Now));
+end.
 ```
+
+See [Standard Library - DateTime](STANDARD_LIBRARY.md#datetime) for complete documentation.
 
 ### How do I generate random numbers?
 
-Use C++ random:
+Use the Maths module:
 
 ```myra
-#include_header '<random>'
+import Maths;
 
-#startcpp header
-inline int RandomInt(int min, int max) {
-    static std::mt19937 rng(std::random_device{}());
-    std::uniform_int_distribution<int> dist(min, max);
-    return dist(rng);
-}
-#endcpp
+begin
+  Maths.Randomize();  // Seed the generator
+  
+  Console.PrintLn('Random 0-99: {}', Maths.Random(100));
+  Console.PrintLn('Random float 0-1: {}', Maths.RandomF());
+end.
 ```
+
+See [Standard Library - Maths](STANDARD_LIBRARY.md#maths) for complete documentation.
 
 ### Can I use my favorite C library?
 
@@ -199,17 +214,35 @@ end.
 
 ### How do I debug Myra programs?
 
-Myra includes a fully integrated debugger:
+Myra includes both a command-line debugger and full IDE debugging:
 
+**IDE Debugging (Recommended):**
+1. Run `myra edit` to open the Myra IDE
+2. Set breakpoints by clicking in the gutter or pressing F9
+3. Press F5 to start debugging
+4. Use F10 (step over), F11 (step into), Shift+F11 (step out)
+5. Inspect variables in the Debug panel
+
+**Command Line Debugging:**
 1. Use `#optimization DEBUG` for debug builds
 2. Run `myra debug` to launch the interactive debugger
 3. Use debugger commands: `b` (breakpoint), `c` (continue), `n` (next), `s` (step into), `bt` (backtrace), `locals`, `p` (print)
 4. Use `#breakpoint` directives in code for automatic breakpoint generation
-5. For IDE integration, configure `lldb-dap.exe` (bundled in `bin/res/lldb/bin/`) in VS Code or other DAP-compatible IDEs
 
 ### What IDE support exists?
 
-Currently: syntax highlighting for common editors. The language is simple enough that basic highlighting covers most needs. LSP support is planned.
+Myra includes a complete IDE (`myra edit`) based on VSCodium with:
+
+- **Syntax highlighting** — Full Myra grammar with C++ passthrough support
+- **Code completion** — Keywords, types, and module symbols (e.g., `Console.PrintLn`)
+- **Signature help** — Parameter hints with overload support
+- **Hover information** — Symbol details on mouse hover
+- **Go to definition** — Jump to symbol declarations (F12)
+- **Real-time diagnostics** — Errors and warnings as you type
+- **Debugging** — Breakpoints, stepping, variable inspection
+- **Run/Debug buttons** — Quick access in the editor title bar
+
+The extension also works with VS Code or any VSCodium installation.
 
 ## Troubleshooting
 

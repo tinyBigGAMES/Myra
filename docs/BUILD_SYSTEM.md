@@ -41,6 +41,7 @@ Everything is included in the release — no external dependencies:
 |------|-------------|
 | Zig | C++ compiler backend for native code generation |
 | LLDB | Debugger with DAP support for IDE integration |
+| Myra Edit | VSCodium with Myra extension, LSP, and debugging |
 | raylib | Static library for game/graphics development |
 | Standard Library | Console, System, Assertions, UnitTest modules |
 
@@ -60,6 +61,7 @@ myra <COMMAND> [OPTIONS]
 | `build` | Compile source to C++ and build executable |
 | `run` | Execute the compiled program |
 | `debug` | Start interactive debugger for compiled program |
+| `edit` | Open project in the Myra IDE |
 | `clean` | Remove all generated files |
 | `zig <args>` | Pass arguments directly to Zig compiler |
 | `version` | Display version information |
@@ -93,6 +95,9 @@ myra init MyPlugin --template dll
 # Create a static library project
 myra init MyLib --template lib
 
+# Open project in IDE
+myra edit
+
 # Build the current project
 myra build
 
@@ -117,13 +122,12 @@ myra zig cc -c myfile.c
 myra init HelloWorld
 cd HelloWorld
 
-# Edit source file
-# HelloWorld.myra
+# Open in IDE (recommended)
+myra edit
 
-# Build
+# Or use command line:
+# Edit source file manually
 myra build
-
-# Run
 myra run
 
 # Clean when needed
@@ -403,7 +407,26 @@ Enables TEST blocks and unit testing framework.
 
 ## Debugging
 
-Myra includes a fully integrated debugger based on LLDB with Debug Adapter Protocol (DAP) support.
+Myra includes both command-line and IDE debugging options.
+
+### Myra Edit Debugging (Recommended)
+
+The easiest way to debug is using Myra Edit:
+
+```bash
+myra edit
+```
+
+In the editor:
+1. Set breakpoints by clicking in the gutter (left margin) or press F9
+2. Press F5 to start debugging
+3. Use F10 (step over), F11 (step into), Shift+F11 (step out)
+4. Inspect variables in the Debug panel
+5. View call stack and watch expressions
+
+### Command Line Debugging
+
+Myra also includes an interactive command-line debugger based on LLDB with Debug Adapter Protocol (DAP) support.
 
 ### Debugger Location
 
@@ -471,10 +494,6 @@ end;
 ```
 
 The `.breakpoints` file (JSON format) is automatically loaded when debugging.
-
-### IDE Integration
-
-The `lldb-dap.exe` executable can be configured in VS Code or other DAP-compatible IDEs for graphical debugging of Myra programs.
 
 ## Troubleshooting
 
