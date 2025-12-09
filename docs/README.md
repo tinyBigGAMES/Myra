@@ -17,6 +17,28 @@ Myra is a minimal systems programming language, inspired by Niklaus Wirth's Ober
 - **Dynamic arrays** — SetLength/Len with automatic memory management.
 - **Unit testing** — Built-in TEST blocks for integrated testing.
 
+## IDE Support
+
+Myra includes a full-featured Language Server Protocol (LSP) implementation:
+
+| Feature | Description | Shortcut |
+|---------|-------------|----------|
+| Semantic Highlighting | Context-aware coloring for types, variables, parameters, fields, routines | Auto |
+| Code Completion | Keywords, types, symbols, record fields | Ctrl+Space |
+| Signature Help | Parameter hints with overloads | Auto on `(` |
+| Hover Information | Symbol details | Mouse hover |
+| Go to Definition | Jump to declaration | F12 |
+| Go to Type Definition | Jump to type | — |
+| Go to Implementation | Navigate to implementation | Ctrl+F12 |
+| Find All References | Find all usages | Shift+F12 |
+| Document Highlights | Highlight occurrences | Auto |
+| Rename Symbol | Rename across files | F2 |
+| Document Outline | Symbol navigation | Ctrl+Shift+O |
+| Folding Ranges | Collapse/expand blocks | Ctrl+Shift+[ |
+| Smart Selection | Expand to syntax | Shift+Alt+→ |
+| Diagnostics | Real-time errors | Auto |
+| Code Actions | Quick fixes | Ctrl+. |
+
 ## Quick Start
 
 ```myra

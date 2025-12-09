@@ -46,6 +46,11 @@ This launches a fully-configured development environment with:
 - **Syntax highlighting** for Myra and embedded C++
 - **Code completion** as you type (Ctrl+Space)
 - **Signature help** with parameter hints
+- **Go to Definition/Type/Implementation** — navigate code quickly
+- **Find All References** — find all usages of a symbol
+- **Rename Symbol** — rename across all files
+- **Folding** — collapse routines, records, and test blocks
+- **Smart Selection** — expand selection to enclosing syntax
 - **Real-time error checking** — errors appear as you type
 - **Debugging** with breakpoints (F5 to start)
 - **Run/Debug buttons** in the editor title bar
@@ -147,7 +152,14 @@ Hello, World!
 | Code Completion | Type and wait, or press Ctrl+Space |
 | Signature Help | Type `(` after a routine name |
 | Go to Definition | F12 or Ctrl+Click |
+| Go to Type Definition | Right-click → Go to Type Definition |
+| Go to Implementation | Ctrl+F12 |
+| Find All References | Shift+F12 |
+| Rename Symbol | F2 |
 | Hover Info | Hover mouse over a symbol |
+| Document Outline | Ctrl+Shift+O |
+| Fold/Unfold | Ctrl+Shift+[ / Ctrl+Shift+] |
+| Expand Selection | Shift+Alt+→ |
 | Build | Ctrl+Shift+B |
 | Run | Ctrl+F5 or click ▶ button |
 | Debug | F5 or click 🐛 button |

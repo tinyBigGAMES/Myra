@@ -299,12 +299,21 @@ myra edit
 This opens your project in a fully-configured editor with:
 
 ### IntelliSense Features
-- **Code Completion** — Keywords, types, and module symbols (e.g., `Console.PrintLn`)
+- **Semantic Highlighting** — Context-aware coloring for types, variables, parameters, fields, routines, and constants
+- **Code Completion** — Keywords, types, symbols, and record field access
 - **Signature Help** — Parameter hints with overload support (navigate with ↑/↓)
 - **Hover Information** — Symbol details on mouse hover
 - **Go to Definition** — Jump to symbol declarations (F12)
-- **Real-time Diagnostics** — Errors and warnings as you type
+- **Go to Type Definition** — Jump from variable to its type declaration
+- **Go to Implementation** — Navigate to implementation (Ctrl+F12)
+- **Find All References** — Find all usages of a symbol (Shift+F12)
+- **Document Highlights** — Highlight all occurrences of symbol under cursor
+- **Rename Symbol** — Rename across all files (F2)
 - **Document Outline** — Navigate symbols in the current file
+- **Folding Ranges** — Collapse/expand routines, records, and test blocks
+- **Smart Selection** — Expand selection to enclosing syntax (Shift+Alt+→)
+- **Real-time Diagnostics** — Errors and warnings as you type
+- **Code Actions** — Quick fixes and refactoring suggestions
 
 ### Debugging
 - **Breakpoints** — Click in the gutter or press F9
