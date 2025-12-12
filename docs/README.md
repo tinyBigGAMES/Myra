@@ -78,10 +78,10 @@ myra run
 ## Resources
 
 - **Website:** [myralang.org](https://myralang.org)
-- **Repository:** [GitHub](https://github.com/user/myra)
+- **Repository:** [GitHub](https://github.com/tinyBigGAMES/Myra/releases)
 
 ## License
 
-Myra is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
+Myra is licensed under the Apache License 2.0. See [LICENSE](https://github.com/tinyBigGAMES/Myra/tree/main?tab=License-1-ov-file#readme) for details.
 
 *Myra™ — Pascal. Refined.*
