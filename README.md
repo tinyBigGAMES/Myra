@@ -48,7 +48,7 @@ end.
 
 ### Installation
 
-1. Download the latest release from the [Releases](https://github.com/user/myra/releases) page
+1. Download the latest release from the [Releases](https://github.com/tinyBigGAMES/Myra/releases) page
 2. Extract to a folder (e.g., `C:\myra`)
 3. Add the `bin` folder to your PATH
 
