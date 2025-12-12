@@ -9,7 +9,7 @@
 
 A minimal systems programming language that compiles to native executables via C++23.
 
-[Quick Start](#quick-start) • [Documentation](docs/README.md) • [Examples](docs/EXAMPLES.md) • [FAQ](docs/FAQ.md)
+[Quick Start](#prerequisites) • [Documentation](docs/README.md) • [Examples](docs/EXAMPLES.md) • [FAQ](docs/FAQ.md)
 
 </div>
 
