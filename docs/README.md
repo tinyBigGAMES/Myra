@@ -78,7 +78,7 @@ myra run
 ## Resources
 
 - **Website:** [myralang.org](https://myralang.org)
-- **Repository:** [GitHub](https://github.com/tinyBigGAMES/Myra/releases)
+- **Repository:** [GitHub](https://github.com/tinyBigGAMES/Myra)
 
 ## License
 
