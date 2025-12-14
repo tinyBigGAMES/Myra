@@ -115,6 +115,7 @@ type
     Filename: string;
     Line: Integer;
     Column: Integer;
+    StartPos: Integer;
   end;
 
 implementation

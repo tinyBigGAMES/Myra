@@ -207,7 +207,7 @@ type
     function Analyze(): Boolean;
     {$HINTS ON}
     function Build(const ACompileOnly: Boolean; var AExitCode: DWORD): Boolean;
-    function Run(var AExitCode: DWORD): Boolean;
+    function Run(var AExitCode: DWORD; const ACaptureOutput: Boolean = False): Boolean;
     function Clean(): Boolean;
     function Debug(): Boolean;
 
@@ -1313,7 +1313,7 @@ begin
   TUtils.CaptureZigConsoleOutput(
     'Building ' + FProjectName,
     PChar(LZigExe),
-    'build -p out --color off --summary new --prominent-compile-errors',
+    'build -p out --color on --summary new --prominent-compile-errors',
     FProjectDir,
     AExitCode,
     nil,
@@ -1425,16 +1425,18 @@ begin
   // Parse
   LParser := TParser.Create();
   try
-    LAST := LParser.Process(LTokens, Self, FErrors);
+    LAST := LParser.Process(LTokens, LSource, Self, FErrors);
   finally
     LParser.Free();
   end;
 
   if (LAST = nil) or FErrors.HasFatal() then
+  begin
+    LAST.Free();
     Exit;
+  end;
 
   LExeDir := TPath.GetDirectoryName(ParamStr(0));
-
 
   try
     // Process imports first (recursively transpile imported modules)
@@ -1586,13 +1588,16 @@ begin
   // Parse
   LParser := TParser.Create();
   try
-    LAST := LParser.Process(LTokens, Self, FErrors);
+    LAST := LParser.Process(LTokens, LSource, Self, FErrors);
   finally
     LParser.Free();
   end;
 
   if (LAST = nil) or FErrors.HasFatal() then
+  begin
+    LAST.Free();
     Exit;
+  end;
 
   LExeDir := TPath.GetDirectoryName(ParamStr(0));
 
@@ -1915,7 +1920,7 @@ begin
     Result := tgtNative;
 end;
 
-function TCompiler.Run(var AExitCode: DWORD): Boolean;
+function TCompiler.Run(var AExitCode: DWORD; const ACaptureOutput: Boolean): Boolean;
 var
   LProjectDir: string;
   LProjectName: string;
@@ -1962,13 +1967,33 @@ begin
     Exit;
   end;
 
-  AExitCode := TUtils.RunExe(
-    LExePath,
-    '',
-    LProjectDir,
-    True,
-    SW_SHOW
-  );
+  if ACaptureOutput then
+  begin
+    // Capture output and send to callback (for IDE integration)
+    TUtils.CaptureConsoleOutput(
+      'Running ' + LProjectName,
+      PChar(LExePath),
+      '',
+      LProjectDir,
+      AExitCode,
+      nil,
+      procedure(const ALine: string; const AUserData: Pointer)
+      begin
+        Output('%s', [ALine]);
+      end
+    );
+  end
+  else
+  begin
+    // Run in separate console window (for command-line usage)
+    AExitCode := TUtils.RunExe(
+      LExePath,
+      '',
+      LProjectDir,
+      True,
+      SW_SHOW
+    );
+  end;
 
   Result := True;
 end;

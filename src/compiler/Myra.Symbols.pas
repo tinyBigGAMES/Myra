@@ -214,7 +214,7 @@ constructor TRoutineTypeSymbol.Create();
 begin
   inherited Create();
 
-  Params := TObjectList<TSymbol>.Create(False);
+  Params := TObjectList<TSymbol>.Create(True); // Routine type owns its param symbols
   CallingConv := ccDefault;
 end;
 

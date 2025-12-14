@@ -126,7 +126,7 @@ begin
   FShutdownRequested := False;
 
   // Enable logging for debugging (optional)
-  FLogEnabled := True;
+  FLogEnabled := False;
 
   if FLogEnabled then
   begin

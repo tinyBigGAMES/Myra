@@ -212,6 +212,35 @@ begin
 end.
 ```
 
+### How do I build C libraries for use with Myra?
+
+Use `myra zig` to build C libraries as static libraries:
+
+```bash
+# Navigate to library source
+cd path/to/library
+
+# Build as static library
+myra zig build-lib sqlite3.c -OReleaseFast -lc
+```
+
+This creates `sqlite3.lib` (Windows) or `libsqlite3.a` (Linux/macOS).
+
+Then link it in your Myra project:
+
+```myra
+#include_path 'path/to/library'
+#library_path 'path/to/library'
+#link 'sqlite3'
+#include_header '"sqlite3.h"'
+```
+
+**Why not use `#source_file` for C files?**
+
+Myra's build system applies C++23 flags to all source files, which causes errors with pure C code. Building as a static library first avoids this issue.
+
+See [Build System - Using Zig Directly](BUILD_SYSTEM.md#using-zig-directly) for more details.
+
 ### How do I debug Myra programs?
 
 Myra includes both a command-line debugger and full IDE debugging:

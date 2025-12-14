@@ -27,19 +27,6 @@ function ParseCppExprPassthrough(const AParser: TParser; const ATerminators: arr
 
 implementation
 
-function IsWordChar(const AChar: Char): Boolean;
-begin
-  Result := ((AChar >= 'A') and (AChar <= 'Z')) or
-            ((AChar >= 'a') and (AChar <= 'z')) or
-            ((AChar >= '0') and (AChar <= '9')) or
-            (AChar = '_');
-end;
-
-function IsWordToken(const AText: string): Boolean;
-begin
-  Result := (Length(AText) > 0) and IsWordChar(AText[1]);
-end;
-
 function ParseCppBlock(const AParser: TParser): TCppBlockNode;
 var
   LToken: TToken;
@@ -83,18 +70,18 @@ end;
 function ParseCppPassthrough(const AParser: TParser): TCppBlockNode;
 var
   LToken: TToken;
-  LText: string;
-  LPrevText: string;
-  LCurrText: string;
+  LStartPos: Integer;
+  LEndPos: Integer;
   LStartLine: Integer;
+  LLastToken: TToken;
 begin
   Result := TCppBlockNode.Create();
   LToken := AParser.Current();
   AParser.SetNodeLocation(Result, LToken);
   Result.Target := AParser.FCurrentEmitTarget;
 
-  LText := '';
-  LPrevText := '';
+  // Record start position in source
+  LStartPos := LToken.StartPos;
 
   // C++ preprocessor directive: line-terminated
   if LToken.Kind = tkDirective then
@@ -103,25 +90,12 @@ begin
     
     while not AParser.IsAtEnd() and (AParser.Current().Line = LStartLine) do
     begin
-      LCurrText := AParser.Current().Text;
-
-      if LText <> '' then
-      begin
-        // After preprocessor directive keyword (starts with #), always add space
-        if (Length(LPrevText) > 0) and (LPrevText[1] = '#') then
-          LText := LText + ' '
-        // Between two word tokens, add space (but not for hex literals like 0x...)
-        else if IsWordToken(LPrevText) and IsWordToken(LCurrText) then
-        begin
-          if not ((LPrevText = '0') and (Length(LCurrText) > 0) and CharInSet(LCurrText[1], ['x', 'X'])) then
-            LText := LText + ' ';
-        end;
-      end;
-
-      LText := LText + LCurrText;
-      LPrevText := LCurrText;
+      LLastToken := AParser.Current();
       AParser.Advance();
     end;
+    
+    // Calculate end position from last consumed token
+    LEndPos := LLastToken.StartPos + Length(LLastToken.Text);
   end
   else
   begin
@@ -129,53 +103,42 @@ begin
     while not AParser.IsAtEnd() and (AParser.Current().Kind <> tkSemicolon) and
           not (AParser.Current().Kind in [tkEnd, tkElse, tkUntil, tkExcept, tkFinally]) do
     begin
-      LCurrText := AParser.Current().Text;
-
-      if LText <> '' then
-      begin
-        // Only add space between word tokens that would merge without it
-        // (identifiers, keywords, numbers). Operators and punctuation don't need spacing.
-        // But not for hex literals like 0x...
-        if IsWordToken(LPrevText) and IsWordToken(LCurrText) then
-        begin
-          if not ((LPrevText = '0') and (Length(LCurrText) > 0) and CharInSet(LCurrText[1], ['x', 'X'])) then
-            LText := LText + ' ';
-        end;
-      end;
-
-      LText := LText + LCurrText;
-      LPrevText := LCurrText;
+      LLastToken := AParser.Current();
       AParser.Advance();
     end;
 
     if AParser.Current().Kind = tkSemicolon then
     begin
-      LText := LText + ';';
+      LLastToken := AParser.Current();
       AParser.Advance();
     end;
+    
+    // Calculate end position from last consumed token
+    LEndPos := LLastToken.StartPos + Length(LLastToken.Text);
   end;
 
-  Result.RawText := LText;
+  // Extract raw source text - exact preservation
+  Result.RawText := Copy(AParser.FSource, LStartPos, LEndPos - LStartPos);
 end;
 
 function ParseCppExprPassthrough(const AParser: TParser; const ATerminators: array of TTokenKind): TCppPassthroughNode;
 var
   LToken: TToken;
-  LText: string;
-  LPrevText: string;
-  LCurrText: string;
+  LStartPos: Integer;
+  LEndPos: Integer;
   LParenDepth: Integer;
   LBracketDepth: Integer;
   LBraceDepth: Integer;
   I: Integer;
   LIsTerminator: Boolean;
+  LLastToken: TToken;
 begin
   Result := TCppPassthroughNode.Create();
   LToken := AParser.Current();
   AParser.SetNodeLocation(Result, LToken);
 
-  LText := '';
-  LPrevText := '';
+  // Record start position in source
+  LStartPos := LToken.StartPos;
   LParenDepth := 0;
   LBracketDepth := 0;
   LBraceDepth := 0;
@@ -198,8 +161,6 @@ begin
         Break;
     end;
 
-    LCurrText := AParser.Current().Text;
-
     // Track nesting depth
     if AParser.Current().Kind = tkLParen then
       Inc(LParenDepth)
@@ -214,24 +175,15 @@ begin
     else if AParser.Current().Kind = tkRBrace then
       Dec(LBraceDepth);
 
-    if LText <> '' then
-    begin
-      // Only add space between word tokens that would merge without it
-      // (identifiers, keywords, numbers). Operators and punctuation don't need spacing.
-      // But not for hex literals like 0x...
-      if IsWordToken(LPrevText) and IsWordToken(LCurrText) then
-      begin
-        if not ((LPrevText = '0') and (Length(LCurrText) > 0) and CharInSet(LCurrText[1], ['x', 'X'])) then
-          LText := LText + ' ';
-      end;
-    end;
-
-    LText := LText + LCurrText;
-    LPrevText := LCurrText;
+    LLastToken := AParser.Current();
     AParser.Advance();
   end;
 
-  Result.RawText := LText;
+  // Calculate end position from last consumed token
+  LEndPos := LLastToken.StartPos + Length(LLastToken.Text);
+
+  // Extract raw source text - exact preservation
+  Result.RawText := Copy(AParser.FSource, LStartPos, LEndPos - LStartPos);
 end;
 
 end.

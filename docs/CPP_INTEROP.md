@@ -214,6 +214,17 @@ end.
 #include_path 'C:/SDK/include'
 ```
 
+### Including Source Files
+
+You can include C++ source files directly in your build:
+
+```myra
+#source_path 'vendor/src'
+#source_file 'vendor/src/wrapper.cpp'
+```
+
+**Note:** For C source files (`.c`), build them as static libraries first using `myra zig build-lib`. See [Build System - Using Zig Directly](BUILD_SYSTEM.md#using-zig-directly).
+
 ### Linking Libraries
 
 ```myra

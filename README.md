@@ -283,10 +283,27 @@ myra run                   # Run the executable
 myra debug                 # Run with integrated debugger
 myra clean                 # Remove generated files
 myra edit                  # Open project in Myra Edit
-myra zig <args>            # Pass arguments to Zig
+myra zig <args>            # Pass arguments to Zig (see below)
 myra version               # Show version
 myra help                  # Show help
 ```
+
+### Using Zig Directly
+
+The `myra zig` command passes arguments directly to Myra's bundled Zig compiler. This is useful for building C libraries:
+
+```bash
+# Build SQLite as a static library
+myra zig build-lib sqlite3.c -OReleaseFast -lc
+
+# Check Zig version
+myra zig version
+
+# List cross-compilation targets
+myra zig targets
+```
+
+See [Build System - Using Zig Directly](docs/BUILD_SYSTEM.md#using-zig-directly) for details.
 
 ## 🖥️ Myra Edit
 
@@ -360,7 +377,10 @@ Use `#breakpoint` directives in code for automatic breakpoints.
 #target x86_64-windows     // Cross-compile target
 #apptype GUI               // Windows GUI application
 #include_header '<vector>' // Include C++ header
+#include_path 'include'    // Header search path
 #link 'sqlite3'            // Link library
+#library_path 'lib'        // Library search path
+#source_file 'file.cpp'    // Include C++ source in build
 #breakpoint                // Set debugger breakpoint
 ```
 

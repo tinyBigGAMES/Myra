@@ -64,6 +64,8 @@ begin
             (LUpper = '#LIBRARY_PATH') or
             (LUpper = '#INCLUDE_PATH') or
             (LUpper = '#MODULE_PATH') or
+            (LUpper = '#SOURCE_PATH') or
+            (LUpper = '#SOURCE_FILE') or
             (LUpper = '#OPTIMIZATION') or
             (LUpper = '#TARGET') or
             (LUpper = '#APPTYPE') or
@@ -84,118 +86,117 @@ var
   LVar: TVarDeclNode;
 begin
   Result := TModuleNode.Create();
-  LToken := AParser.Current();
-  AParser.SetNodeLocation(Result, LToken);
+  try
+    LToken := AParser.Current();
+    AParser.SetNodeLocation(Result, LToken);
 
-  AParser.Expect(tkModule);
+    AParser.Expect(tkModule);
 
-  LToken := AParser.Current();
-  if LToken.Kind <> tkIdentifier then
-  begin
-    AParser.FErrors.Add(LToken.Filename, LToken.Line, LToken.Column, esError, 'E107',
-      'Expected module type (exe, dll, or lib)');
-    Result.Free();
-    Result := nil;
-    Exit;
-  end;
-
-  if SameText(LToken.Text, 'dll') then
-  begin
-    Result.ModuleKind := mkDll;
-    AParser.Advance();
-  end
-  else if SameText(LToken.Text, 'lib') then
-  begin
-    Result.ModuleKind := mkLibrary;
-    AParser.Advance();
-  end
-  else if SameText(LToken.Text, 'exe') then
-  begin
-    Result.ModuleKind := mkExecutable;
-    AParser.Advance();
-  end
-  else
-  begin
-    AParser.FErrors.Add(LToken.Filename, LToken.Line, LToken.Column, esError, 'E107',
-      'Expected module type (exe, dll, or lib), got: ' + LToken.Text);
-    Result.Free();
-    Result := nil;
-    Exit;
-  end;
-
-  LToken := AParser.Current();
-  AParser.Expect(tkIdentifier);
-  Result.ModuleName := LToken.Text;
-  AParser.Expect(tkSemicolon);
-
-  while AParser.Current().Kind = tkDirective do
-  begin
-    if IsMyrDirective(AParser.Current().Text) then
+    LToken := AParser.Current();
+    if LToken.Kind <> tkIdentifier then
     begin
-      LDirective := ParseDirective(AParser);
-      if LDirective <> nil then
-        Result.Directives.Add(LDirective);
+      AParser.FErrors.Add(LToken.Filename, LToken.Line, LToken.Column, esError, 'E107',
+        'Expected module type (exe, dll, or lib)');
+      FreeAndNil(Result);
+      Exit;
+    end;
+
+    if SameText(LToken.Text, 'dll') then
+    begin
+      Result.ModuleKind := mkDll;
+      AParser.Advance();
+    end
+    else if SameText(LToken.Text, 'lib') then
+    begin
+      Result.ModuleKind := mkLibrary;
+      AParser.Advance();
+    end
+    else if SameText(LToken.Text, 'exe') then
+    begin
+      Result.ModuleKind := mkExecutable;
+      AParser.Advance();
     end
     else
     begin
-      LCppBlock := ParseCppPassthrough(AParser);
-      Result.CppBlocks.Add(LCppBlock);
+      AParser.FErrors.Add(LToken.Filename, LToken.Line, LToken.Column, esError, 'E107',
+        'Expected module type (exe, dll, or lib), got: ' + LToken.Text);
+      FreeAndNil(Result);
+      Exit;
     end;
-  end;
 
-  if AParser.Current().Kind = tkImport then
-  begin
-    Result.Imports.Free();
-    Result.Imports := ParseImports(AParser);
-  end;
-
-  while not AParser.IsAtEnd() and not (AParser.Current().Kind in [tkEnd, tkBegin]) do
-  begin
     LToken := AParser.Current();
-    LIsPublic := False;
+    AParser.Expect(tkIdentifier);
+    Result.ModuleName := LToken.Text;
+    AParser.Expect(tkSemicolon);
 
-    if LToken.Kind = tkPublic then
+    while AParser.Current().Kind = tkDirective do
     begin
-      LIsPublic := True;
-      AParser.Advance();
-      LToken := AParser.Current();
+      if IsMyrDirective(AParser.Current().Text) then
+      begin
+        LDirective := ParseDirective(AParser);
+        if LDirective <> nil then
+          Result.Directives.Add(LDirective);
+      end
+      else
+      begin
+        LCppBlock := ParseCppPassthrough(AParser);
+        Result.CppBlocks.Add(LCppBlock);
+      end;
     end;
 
-    if LToken.Kind = tkConst then
+    if AParser.Current().Kind = tkImport then
     begin
-      LConsts := ParseConstSection(AParser, LIsPublic);
-      for LNode in LConsts do
-        Result.Consts.Add(LNode);
-      LConsts.OwnsObjects := False;
-      LConsts.Free();
-    end
-    else if LToken.Kind = tkType then
+      Result.Imports.Free();
+      Result.Imports := ParseImports(AParser);
+    end;
+
+    while not AParser.IsAtEnd() and not (AParser.Current().Kind in [tkEnd, tkBegin]) do
     begin
-      LTypes := ParseTypeSection(AParser, LIsPublic);
-      for LNode in LTypes do
-        Result.Types.Add(LNode);
-      LTypes.OwnsObjects := False;
-      LTypes.Free();
-    end
-    else if LToken.Kind = tkVar then
-    begin
-      LVars := ParseVarSection(AParser, LIsPublic);
-      for LVar in LVars do
-        Result.Vars.Add(LVar);
-      LVars.OwnsObjects := False;
-      LVars.Free();
-    end
-    else if LToken.Kind = tkRoutine then
-    begin
-      LRoutine := ParseRoutine(AParser, LIsPublic);
-      Result.Routines.Add(LRoutine);
-    end
-    else if LToken.Kind = tkMethod then
-    begin
-      LRoutine := ParseMethod(AParser, LIsPublic);
-      Result.Routines.Add(LRoutine);
-    end
-    else if LToken.Kind = tkDirective then
+      LToken := AParser.Current();
+      LIsPublic := False;
+
+      if LToken.Kind = tkPublic then
+      begin
+        LIsPublic := True;
+        AParser.Advance();
+        LToken := AParser.Current();
+      end;
+
+      if LToken.Kind = tkConst then
+      begin
+        LConsts := ParseConstSection(AParser, LIsPublic);
+        for LNode in LConsts do
+          Result.Consts.Add(LNode);
+        LConsts.OwnsObjects := False;
+        LConsts.Free();
+      end
+      else if LToken.Kind = tkType then
+      begin
+        LTypes := ParseTypeSection(AParser, LIsPublic);
+        for LNode in LTypes do
+          Result.Types.Add(LNode);
+        LTypes.OwnsObjects := False;
+        LTypes.Free();
+      end
+      else if LToken.Kind = tkVar then
+      begin
+        LVars := ParseVarSection(AParser, LIsPublic);
+        for LVar in LVars do
+          Result.Vars.Add(LVar);
+        LVars.OwnsObjects := False;
+        LVars.Free();
+      end
+      else if LToken.Kind = tkRoutine then
+      begin
+        LRoutine := ParseRoutine(AParser, LIsPublic);
+        Result.Routines.Add(LRoutine);
+      end
+      else if LToken.Kind = tkMethod then
+      begin
+        LRoutine := ParseMethod(AParser, LIsPublic);
+        Result.Routines.Add(LRoutine);
+      end
+      else if LToken.Kind = tkDirective then
     begin
       if IsMyrDirective(LToken.Text) then
       begin
@@ -239,22 +240,26 @@ begin
   AParser.Expect(tkDot);
 
   while not AParser.IsAtEnd() and (AParser.Current().Kind = tkTest) do
-  begin
-    if not AParser.FCompiler.GetUnitTestMode() then
     begin
-      AParser.FErrors.Add(AParser.Current().Filename, AParser.Current().Line, AParser.Current().Column, esError, 'E111',
-        'Test blocks require #UNITTESTMODE ON');
-      Break;
-    end;
+      if not AParser.FCompiler.GetUnitTestMode() then
+      begin
+        AParser.FErrors.Add(AParser.Current().Filename, AParser.Current().Line, AParser.Current().Column, esError, 'E111',
+          'Test blocks require #UNITTESTMODE ON');
+        Break;
+      end;
 
-    if Result.ModuleKind = mkDll then
-    begin
-      AParser.FErrors.Add(AParser.Current().Filename, AParser.Current().Line, AParser.Current().Column, esError, 'E112',
-        'Test blocks are not allowed in DLL modules');
-      Break;
-    end;
+      if Result.ModuleKind = mkDll then
+      begin
+        AParser.FErrors.Add(AParser.Current().Filename, AParser.Current().Line, AParser.Current().Column, esError, 'E112',
+          'Test blocks are not allowed in DLL modules');
+        Break;
+      end;
 
-    Result.Tests.Add(ParseTest(AParser));
+      Result.Tests.Add(ParseTest(AParser));
+    end;
+  except
+    FreeAndNil(Result);
+    raise;
   end;
 end;
 
@@ -447,6 +452,42 @@ begin
     else
       AParser.FErrors.Add(LToken.Filename, LToken.Line, LToken.Column, esError, 'E117',
         'Expected string literal after #module_path');
+    Result := nil;
+    Exit;
+  end;
+
+  if LDirective = '#SOURCE_PATH' then
+  begin
+    AParser.Advance();
+    LToken := AParser.Current();
+    if LToken.Kind = tkString then
+    begin
+      LHeader := Copy(LToken.Text, 2, Length(LToken.Text) - 2);
+      if Assigned(AParser.FCompiler) then
+        AParser.FCompiler.AddSourcePath(LHeader);
+      AParser.Advance();
+    end
+    else
+      AParser.FErrors.Add(LToken.Filename, LToken.Line, LToken.Column, esError, 'E123',
+        'Expected string literal after #source_path');
+    Result := nil;
+    Exit;
+  end;
+
+  if LDirective = '#SOURCE_FILE' then
+  begin
+    AParser.Advance();
+    LToken := AParser.Current();
+    if LToken.Kind = tkString then
+    begin
+      LHeader := Copy(LToken.Text, 2, Length(LToken.Text) - 2);
+      if Assigned(AParser.FCompiler) then
+        AParser.FCompiler.AddSourceFile(LHeader);
+      AParser.Advance();
+    end
+    else
+      AParser.FErrors.Add(LToken.Filename, LToken.Line, LToken.Column, esError, 'E124',
+        'Expected string literal after #source_file');
     Result := nil;
     Exit;
   end;
@@ -870,22 +911,27 @@ var
   LLocalPublic: Boolean;
 begin
   Result := TObjectList<TVarDeclNode>.Create();
-  AParser.Expect(tkVar);
+  try
+    AParser.Expect(tkVar);
 
-  while AParser.Current().Kind in [tkIdentifier, tkPublic] do
-  begin
-    LLocalPublic := AIsPublic;
-
-    if AParser.Current().Kind = tkPublic then
+    while AParser.Current().Kind in [tkIdentifier, tkPublic] do
     begin
-      if AParser.Peek().Kind <> tkIdentifier then
-        Break;
-      LLocalPublic := True;
-      AParser.Advance();
-    end;
+      LLocalPublic := AIsPublic;
 
-    LVar := ParseVarDecl(AParser, LLocalPublic);
-    Result.Add(LVar);
+      if AParser.Current().Kind = tkPublic then
+      begin
+        if AParser.Peek().Kind <> tkIdentifier then
+          Break;
+        LLocalPublic := True;
+        AParser.Advance();
+      end;
+
+      LVar := ParseVarDecl(AParser, LLocalPublic);
+      Result.Add(LVar);
+    end;
+  except
+    Result.Free();
+    raise;
   end;
 end;
 
@@ -895,32 +941,37 @@ var
   LStartPos: Integer;
 begin
   Result := TVarDeclNode.Create();
-  LToken := AParser.Current();
-  AParser.SetNodeLocation(Result, LToken);
+  try
+    LToken := AParser.Current();
+    AParser.SetNodeLocation(Result, LToken);
 
-  AParser.Expect(tkIdentifier);
-  Result.VarName := LToken.Text;
-  Result.IsPublic := AIsPublic;
+    AParser.Expect(tkIdentifier);
+    Result.VarName := LToken.Text;
+    Result.IsPublic := AIsPublic;
 
-  AParser.Expect(tkColon);
-  Result.TypeName := AParser.ParseTypeName(Result.TypeNameLine, Result.TypeNameColumn);
+    AParser.Expect(tkColon);
+    Result.TypeName := AParser.ParseTypeName(Result.TypeNameLine, Result.TypeNameColumn);
 
-  // Check for optional initialization
-  if AParser.Match(tkEquals) then
-  begin
-    LStartPos := AParser.FPos;
-    Result.InitValue := ParseExpression(AParser);
-
-    // Fallback to C++ passthrough if not a valid Myra expression
-    if AParser.Current().Kind <> tkSemicolon then
+    // Check for optional initialization
+    if AParser.Match(tkEquals) then
     begin
-      Result.InitValue.Free();
-      AParser.FPos := LStartPos;
-      Result.InitValue := ParseCppExprPassthrough(AParser, [tkSemicolon]);
-    end;
-  end;
+      LStartPos := AParser.FPos;
+      Result.InitValue := ParseExpression(AParser);
 
-  AParser.Expect(tkSemicolon);
+      // Fallback to C++ passthrough if not a valid Myra expression
+      if AParser.Current().Kind <> tkSemicolon then
+      begin
+        Result.InitValue.Free();
+        AParser.FPos := LStartPos;
+        Result.InitValue := ParseCppExprPassthrough(AParser, [tkSemicolon]);
+      end;
+    end;
+
+    AParser.Expect(tkSemicolon);
+  except
+    Result.Free();
+    raise;
+  end;
 end;
 
 function ParseRoutine(const AParser: TParser; const AIsPublic: Boolean): TRoutineNode;

@@ -338,7 +338,7 @@ var
 begin
   try
     LNum := 0;
-    //LNum := 750;
+    //LNum := 850;
     //LNum := 304;
 
     // Automated test mode

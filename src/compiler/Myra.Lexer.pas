@@ -51,7 +51,7 @@ type
     function ScanDirective(): TToken;
     function CheckKeyword(const AText: string): TTokenKind;
     function MakeToken(const AKind: TTokenKind; const AText: string): TToken;
-    function MakeTokenAt(const AKind: TTokenKind; const AText: string; const ALine: Integer; const AColumn: Integer): TToken;
+    function MakeTokenAt(const AKind: TTokenKind; const AText: string; const ALine: Integer; const AColumn: Integer; const AStartPos: Integer): TToken;
     procedure ScanToken();
 
   public
@@ -247,7 +247,7 @@ begin
   LText := Copy(FSource, LStart, FPos - LStart);
   LKind := CheckKeyword(LText);
 
-  Result := MakeTokenAt(LKind, LText, FLine, LStartColumn);
+  Result := MakeTokenAt(LKind, LText, FLine, LStartColumn, LStart);
 end;
 
 function TLexer.ScanNumber(): TToken;
@@ -318,7 +318,7 @@ begin
   else
     LKind := tkInteger;
 
-  Result := MakeTokenAt(LKind, LText, FLine, LStartColumn);
+  Result := MakeTokenAt(LKind, LText, FLine, LStartColumn, LStart);
 end;
 
 function TLexer.ScanString(): TToken;
@@ -368,7 +368,7 @@ begin
   else
     LKind := tkString;
 
-  Result := MakeTokenAt(LKind, LText, LStartLine, LStartColumn);
+  Result := MakeTokenAt(LKind, LText, LStartLine, LStartColumn, LStart);
 end;
 
 function TLexer.ScanWideString(): TToken;
@@ -424,7 +424,7 @@ begin
   else
     LKind := tkWideString;
 
-  Result := MakeTokenAt(LKind, LText, LStartLine, LStartColumn);
+  Result := MakeTokenAt(LKind, LText, LStartLine, LStartColumn, LStart);
 end;
 
 function TLexer.ScanCppBlock(): TToken;
@@ -456,7 +456,7 @@ begin
   end;
 
   LText := TrimRight(Copy(FSource, LStart, FPos - LStart));
-  Result := MakeTokenAt(tkCppBlock, LText, LStartLine, LStartColumn);
+  Result := MakeTokenAt(tkCppBlock, LText, LStartLine, LStartColumn, LStart);
 end;
 
 function TLexer.ScanDirective(): TToken;
@@ -474,27 +474,29 @@ begin
     NextChar();
 
   LText := Copy(FSource, LStart, FPos - LStart);
-  Result := MakeTokenAt(tkDirective, LText, FLine, LStartColumn);
+  Result := MakeTokenAt(tkDirective, LText, FLine, LStartColumn, LStart);
 end;
 
 function TLexer.MakeToken(const AKind: TTokenKind; const AText: string): TToken;
 begin
-  Result := MakeTokenAt(AKind, AText, FLine, FColumn);
+  Result := MakeTokenAt(AKind, AText, FLine, FColumn, FPos);
 end;
 
-function TLexer.MakeTokenAt(const AKind: TTokenKind; const AText: string; const ALine: Integer; const AColumn: Integer): TToken;
+function TLexer.MakeTokenAt(const AKind: TTokenKind; const AText: string; const ALine: Integer; const AColumn: Integer; const AStartPos: Integer): TToken;
 begin
   Result.Kind := AKind;
   Result.Text := AText;
   Result.Filename := FFilename;
   Result.Line := ALine;
   Result.Column := AColumn;
+  Result.StartPos := AStartPos;
 end;
 
 procedure TLexer.ScanToken();
 var
   LChar: Char;
   LStartColumn: Integer;
+  LStartPos: Integer;
 begin
   SkipWhitespace();
 
@@ -529,9 +531,10 @@ begin
     if Copy(FSource, FPos, 9) = '#startcpp' then
     begin
       LStartColumn := FColumn;
+      LStartPos := FPos;
       FPos := FPos + 9;
       FColumn := FColumn + 9;
-      FTokens.Add(MakeTokenAt(tkStartCpp, '#startcpp', FLine, LStartColumn));
+      FTokens.Add(MakeTokenAt(tkStartCpp, '#startcpp', FLine, LStartColumn, LStartPos));
 
       // Skip spaces/tabs (NOT newlines) and look for optional "header" or "source"
       while not IsEOF() and CharInSet(PeekChar(), [' ', #9]) do
@@ -549,9 +552,10 @@ begin
     else if Copy(FSource, FPos, 7) = '#endcpp' then
     begin
       LStartColumn := FColumn;
+      LStartPos := FPos;
       FPos := FPos + 7;
       FColumn := FColumn + 7;
-      FTokens.Add(MakeTokenAt(tkEndCpp, '#endcpp', FLine, LStartColumn));
+      FTokens.Add(MakeTokenAt(tkEndCpp, '#endcpp', FLine, LStartColumn, LStartPos));
       Exit;
     end
     else if IsLetter(PeekChar(1)) then
@@ -591,12 +595,13 @@ begin
 
   // Two-character symbols
   LStartColumn := FColumn;
+  LStartPos := FPos;
 
   if (LChar = ':') and (PeekChar(1) = '=') then
   begin
     NextChar();
     NextChar();
-    FTokens.Add(MakeTokenAt(tkAssign, ':=', FLine, LStartColumn));
+    FTokens.Add(MakeTokenAt(tkAssign, ':=', FLine, LStartColumn, LStartPos));
     Exit;
   end;
 
@@ -604,7 +609,7 @@ begin
   begin
     NextChar();
     NextChar();
-    FTokens.Add(MakeTokenAt(tkNotEquals, '<>', FLine, LStartColumn));
+    FTokens.Add(MakeTokenAt(tkNotEquals, '<>', FLine, LStartColumn, LStartPos));
     Exit;
   end;
 
@@ -612,7 +617,7 @@ begin
   begin
     NextChar();
     NextChar();
-    FTokens.Add(MakeTokenAt(tkLessEq, '<=', FLine, LStartColumn));
+    FTokens.Add(MakeTokenAt(tkLessEq, '<=', FLine, LStartColumn, LStartPos));
     Exit;
   end;
 
@@ -620,7 +625,7 @@ begin
   begin
     NextChar();
     NextChar();
-    FTokens.Add(MakeTokenAt(tkGreaterEq, '>=', FLine, LStartColumn));
+    FTokens.Add(MakeTokenAt(tkGreaterEq, '>=', FLine, LStartColumn, LStartPos));
     Exit;
   end;
 
@@ -632,10 +637,10 @@ begin
     if PeekChar() = '.' then
     begin
       NextChar();
-      FTokens.Add(MakeTokenAt(tkEllipsis, '...', FLine, LStartColumn));
+      FTokens.Add(MakeTokenAt(tkEllipsis, '...', FLine, LStartColumn, LStartPos));
     end
     else
-      FTokens.Add(MakeTokenAt(tkDotDot, '..', FLine, LStartColumn));
+      FTokens.Add(MakeTokenAt(tkDotDot, '..', FLine, LStartColumn, LStartPos));
     Exit;
   end;
 
@@ -643,27 +648,27 @@ begin
   NextChar();
 
   case LChar of
-    '(': FTokens.Add(MakeTokenAt(tkLParen, '(', FLine, LStartColumn));
-    ')': FTokens.Add(MakeTokenAt(tkRParen, ')', FLine, LStartColumn));
-    '[': FTokens.Add(MakeTokenAt(tkLBracket, '[', FLine, LStartColumn));
-    ']': FTokens.Add(MakeTokenAt(tkRBracket, ']', FLine, LStartColumn));
-    '{': FTokens.Add(MakeTokenAt(tkLBrace, '{', FLine, LStartColumn));
-    '}': FTokens.Add(MakeTokenAt(tkRBrace, '}', FLine, LStartColumn));
-    '.': FTokens.Add(MakeTokenAt(tkDot, '.', FLine, LStartColumn));
-    ',': FTokens.Add(MakeTokenAt(tkComma, ',', FLine, LStartColumn));
-    ':': FTokens.Add(MakeTokenAt(tkColon, ':', FLine, LStartColumn));
-    ';': FTokens.Add(MakeTokenAt(tkSemicolon, ';', FLine, LStartColumn));
-    '=': FTokens.Add(MakeTokenAt(tkEquals, '=', FLine, LStartColumn));
-    '<': FTokens.Add(MakeTokenAt(tkLess, '<', FLine, LStartColumn));
-    '>': FTokens.Add(MakeTokenAt(tkGreater, '>', FLine, LStartColumn));
-    '+': FTokens.Add(MakeTokenAt(tkPlus, '+', FLine, LStartColumn));
-    '-': FTokens.Add(MakeTokenAt(tkMinus, '-', FLine, LStartColumn));
-    '*': FTokens.Add(MakeTokenAt(tkStar, '*', FLine, LStartColumn));
-    '/': FTokens.Add(MakeTokenAt(tkSlash, '/', FLine, LStartColumn));
-    '^': FTokens.Add(MakeTokenAt(tkCaret, '^', FLine, LStartColumn));
+    '(': FTokens.Add(MakeTokenAt(tkLParen, '(', FLine, LStartColumn, LStartPos));
+    ')': FTokens.Add(MakeTokenAt(tkRParen, ')', FLine, LStartColumn, LStartPos));
+    '[': FTokens.Add(MakeTokenAt(tkLBracket, '[', FLine, LStartColumn, LStartPos));
+    ']': FTokens.Add(MakeTokenAt(tkRBracket, ']', FLine, LStartColumn, LStartPos));
+    '{': FTokens.Add(MakeTokenAt(tkLBrace, '{', FLine, LStartColumn, LStartPos));
+    '}': FTokens.Add(MakeTokenAt(tkRBrace, '}', FLine, LStartColumn, LStartPos));
+    '.': FTokens.Add(MakeTokenAt(tkDot, '.', FLine, LStartColumn, LStartPos));
+    ',': FTokens.Add(MakeTokenAt(tkComma, ',', FLine, LStartColumn, LStartPos));
+    ':': FTokens.Add(MakeTokenAt(tkColon, ':', FLine, LStartColumn, LStartPos));
+    ';': FTokens.Add(MakeTokenAt(tkSemicolon, ';', FLine, LStartColumn, LStartPos));
+    '=': FTokens.Add(MakeTokenAt(tkEquals, '=', FLine, LStartColumn, LStartPos));
+    '<': FTokens.Add(MakeTokenAt(tkLess, '<', FLine, LStartColumn, LStartPos));
+    '>': FTokens.Add(MakeTokenAt(tkGreater, '>', FLine, LStartColumn, LStartPos));
+    '+': FTokens.Add(MakeTokenAt(tkPlus, '+', FLine, LStartColumn, LStartPos));
+    '-': FTokens.Add(MakeTokenAt(tkMinus, '-', FLine, LStartColumn, LStartPos));
+    '*': FTokens.Add(MakeTokenAt(tkStar, '*', FLine, LStartColumn, LStartPos));
+    '/': FTokens.Add(MakeTokenAt(tkSlash, '/', FLine, LStartColumn, LStartPos));
+    '^': FTokens.Add(MakeTokenAt(tkCaret, '^', FLine, LStartColumn, LStartPos));
   else
     // Unknown character - pass through as-is for C++ compatibility
-    FTokens.Add(MakeTokenAt(tkIdentifier, LChar, FLine, LStartColumn));
+    FTokens.Add(MakeTokenAt(tkIdentifier, LChar, FLine, LStartColumn, LStartPos));
   end;
 end;
 

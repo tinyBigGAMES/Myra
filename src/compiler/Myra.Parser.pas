@@ -29,6 +29,7 @@ type
   TParser = class(TBaseObject)
   public
     FTokens: TArray<TToken>;
+    FSource: string;
     FPos: Integer;
     FErrors: TErrors;
     FCompiler: TCompiler;
@@ -49,7 +50,7 @@ type
     constructor Create(); override;
     destructor Destroy(); override;
 
-    function Process(const ATokens: TArray<TToken>; const ACompiler: TCompiler; const AErrors: TErrors): TModuleNode;
+    function Process(const ATokens: TArray<TToken>; const ASource: string; const ACompiler: TCompiler; const AErrors: TErrors): TModuleNode;
   end;
 
 implementation
@@ -129,9 +130,10 @@ begin
   ANode.Column := AToken.Column;
 end;
 
-function TParser.Process(const ATokens: TArray<TToken>; const ACompiler: TCompiler; const AErrors: TErrors): TModuleNode;
+function TParser.Process(const ATokens: TArray<TToken>; const ASource: string; const ACompiler: TCompiler; const AErrors: TErrors): TModuleNode;
 begin
   FTokens := ATokens;
+  FSource := ASource;
   FCompiler := ACompiler;
   FErrors := AErrors;
   FPos := 0;

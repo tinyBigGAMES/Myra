@@ -1206,6 +1206,38 @@ var
   LWalkType: TTypeSymbol;
   LField: TSymbol;
   LMethod: TSymbol;
+  LWordStart: Integer;
+  LWordEnd: Integer;
+  LTextEdit: TJSONObject;
+  LRange: TJSONObject;
+  LStart: TJSONObject;
+  LEnd: TJSONObject;
+
+  procedure AddCompletionItem(const ALabel: string; const AKind: Integer; const ADetail: string = '');
+  begin
+    LItem := TJSONObject.Create();
+    LItem.AddPair('label', ALabel);
+    LItem.AddPair('kind', TJSONNumber.Create(AKind));
+    if ADetail <> '' then
+      LItem.AddPair('detail', ADetail);
+    // Use textEdit to replace the entire word (from start to end)
+    LTextEdit := TJSONObject.Create();
+    LRange := TJSONObject.Create();
+    LStart := TJSONObject.Create();
+    LStart.AddPair('line', TJSONNumber.Create(LLine));
+    LStart.AddPair('character', TJSONNumber.Create(LWordStart));
+    LEnd := TJSONObject.Create();
+    LEnd.AddPair('line', TJSONNumber.Create(LLine));
+    LEnd.AddPair('character', TJSONNumber.Create(LWordEnd));
+    LRange.AddPair('start', LStart);
+    LRange.AddPair('end', LEnd);
+    LTextEdit.AddPair('range', LRange);
+    LTextEdit.AddPair('newText', ALabel);
+    LItem.AddPair('textEdit', LTextEdit);
+    // Also provide filterText for matching
+    LItem.AddPair('filterText', ALabel);
+    LItems.Add(LItem);
+  end;
 begin
   LTextDocument := AParams.GetValue<TJSONObject>('textDocument');
   LPosition := AParams.GetValue<TJSONObject>('position');
@@ -1214,6 +1246,30 @@ begin
   LChar := LPosition.GetValue<Integer>('character');
 
   LItems := TJSONArray.Create();
+
+  // Calculate word boundaries (scan backwards and forwards from cursor)
+  // LSP uses 0-based positions, Delphi strings are 1-based
+  LWordStart := LChar;
+  LWordEnd := LChar;
+  if FDocuments.TryGetValue(LUri, LDocInfo) then
+  begin
+    LLines := LDocInfo.Content.Split([#10]);
+    if (LLine >= 0) and (LLine < Length(LLines)) then
+    begin
+      LCurrentLine := LLines[LLine].TrimRight([#13]);
+      // Scan backwards to find word start
+      // LChar is 0-based cursor position, LCurrentLine is 1-based
+      // Character at 0-based position N is LCurrentLine[N+1]
+      while (LWordStart > 0) and (LWordStart <= Length(LCurrentLine)) and
+            CharInSet(LCurrentLine[LWordStart], ['A'..'Z', 'a'..'z', '0'..'9', '_']) do
+        Dec(LWordStart);
+      // Scan forwards to find word end
+      // LWordEnd is 0-based, so check LCurrentLine[LWordEnd+1]
+      while (LWordEnd < Length(LCurrentLine)) and
+            CharInSet(LCurrentLine[LWordEnd + 1], ['A'..'Z', 'a'..'z', '0'..'9', '_']) do
+        Inc(LWordEnd);
+    end;
+  end;
 
   // Check if after a dot (Module.)
   LModuleName := '';
@@ -1259,29 +1315,19 @@ begin
         // Show fields
         for LField in LWalkType.Fields do
         begin
-          LItem := TJSONObject.Create();
-          LItem.AddPair('label', LField.SymbolName);
-          LItem.AddPair('kind', TJSONNumber.Create(5)); // Field
-          
+          LDetail := '';
           if Assigned(LField.TypeRef) then
-            LItem.AddPair('detail', ': ' + LField.TypeRef.SymbolName);
-          
-          LItem.AddPair('insertText', LField.SymbolName);
-          LItems.Add(LItem);
+            LDetail := ': ' + LField.TypeRef.SymbolName;
+          AddCompletionItem(LField.SymbolName, 5, LDetail); // Field
         end;
         
         // Show methods
         for LMethod in LWalkType.Methods do
         begin
-          LItem := TJSONObject.Create();
-          LItem.AddPair('label', LMethod.SymbolName);
-          LItem.AddPair('kind', TJSONNumber.Create(3)); // Method
-          
+          LDetail := '';
           if (LMethod is TRoutineSymbol) and Assigned(TRoutineSymbol(LMethod).ReturnType) then
-            LItem.AddPair('detail', ': ' + TRoutineSymbol(LMethod).ReturnType.SymbolName);
-          
-          LItem.AddPair('insertText', LMethod.SymbolName);
-          LItems.Add(LItem);
+            LDetail := ': ' + TRoutineSymbol(LMethod).ReturnType.SymbolName;
+          AddCompletionItem(LMethod.SymbolName, 3, LDetail); // Method
         end;
         
         // Walk up inheritance chain
@@ -1295,10 +1341,6 @@ begin
     // Otherwise check if it's a module
     for LSymbol in FCompiler.Symbols.GetModuleSymbols(LModuleName) do
     begin
-      LItem := TJSONObject.Create();
-      LItem.AddPair('label', LSymbol.SymbolName);
-      LItem.AddPair('kind', TJSONNumber.Create(GetCompletionKindForLSP(LSymbol.Kind)));
-      
       // Build detail string
       LDetail := '';
       if LSymbol is TRoutineSymbol then
@@ -1309,12 +1351,7 @@ begin
       end
       else if Assigned(LSymbol.TypeRef) then
         LDetail := ': ' + LSymbol.TypeRef.SymbolName;
-      
-      if LDetail <> '' then
-        LItem.AddPair('detail', LDetail);
-      
-      LItem.AddPair('insertText', LSymbol.SymbolName);
-      LItems.Add(LItem);
+      AddCompletionItem(LSymbol.SymbolName, GetCompletionKindForLSP(LSymbol.Kind), LDetail);
     end;
     
     Result := LItems;
@@ -1326,10 +1363,6 @@ begin
   begin
     for LSymbol in FCompiler.Symbols.GetAllSymbols() do
     begin
-      LItem := TJSONObject.Create();
-      LItem.AddPair('label', LSymbol.SymbolName);
-      LItem.AddPair('kind', TJSONNumber.Create(GetCompletionKindForLSP(LSymbol.Kind)));
-      
       // Build detail string
       LDetail := '';
       if LSymbol is TRoutineSymbol then
@@ -1340,50 +1373,27 @@ begin
       end
       else if Assigned(LSymbol.TypeRef) then
         LDetail := ': ' + LSymbol.TypeRef.SymbolName;
-      
-      if LDetail <> '' then
-        LItem.AddPair('detail', LDetail);
-      
-      LItem.AddPair('insertText', LSymbol.SymbolName);
-      LItems.Add(LItem);
+      AddCompletionItem(LSymbol.SymbolName, GetCompletionKindForLSP(LSymbol.Kind), LDetail);
     end;
   end;
 
   // Keywords (45 total)
-  for LKeyword in ['MODULE', 'IMPORT', 'PUBLIC', 'CONST', 'TYPE', 'VAR',
-                   'ROUTINE', 'BEGIN', 'END', 'IF', 'THEN', 'ELSE', 'CASE', 'OF',
-                   'WHILE', 'DO', 'REPEAT', 'UNTIL', 'FOR', 'TO', 'DOWNTO',
-                   'RETURN', 'ARRAY', 'RECORD', 'SET', 'POINTER', 'NIL',
-                   'AND', 'OR', 'NOT', 'DIV', 'MOD', 'IN', 'IS', 'AS',
-                   'TRY', 'EXCEPT', 'FINALLY', 'TEST', 'EXTERNAL', 'METHOD',
-                   'SELF', 'INHERITED', 'PARAMCOUNT', 'PARAMSTR'] do
-  begin
-    LItem := TJSONObject.Create();
-    LItem.AddPair('label', LKeyword);
-    LItem.AddPair('kind', TJSONNumber.Create(14));
-    LItem.AddPair('insertText', LKeyword);
-    LItems.Add(LItem);
-  end;
+  for LKeyword in ['module', 'import', 'public', 'const', 'type', 'var',
+                   'routine', 'begin', 'end', 'if', 'then', 'else', 'case', 'of',
+                   'while', 'do', 'repeat', 'until', 'for', 'to', 'downto',
+                   'return', 'array', 'record', 'set', 'pointer', 'nil',
+                   'and', 'or', 'not', 'div', 'mod', 'in', 'is', 'as',
+                   'try', 'except', 'finally', 'test', 'external', 'method',
+                   'Self', 'inherited', 'ParamCount', 'ParamStr'] do
+    AddCompletionItem(LKeyword, 14);
 
   // Built-in types (7 native Myra types)
-  for LTypeName in ['INTEGER', 'UINTEGER', 'FLOAT', 'STRING', 'BOOLEAN', 'CHAR', 'UCHAR'] do
-  begin
-    LItem := TJSONObject.Create();
-    LItem.AddPair('label', LTypeName);
-    LItem.AddPair('kind', TJSONNumber.Create(22));
-    LItem.AddPair('insertText', LTypeName);
-    LItems.Add(LItem);
-  end;
+  for LTypeName in ['Integer', 'UInteger', 'Float', 'String', 'Boolean', 'Char', 'UChar'] do
+    AddCompletionItem(LTypeName, 22);
 
   // Built-in constants
-  for LConstName in ['TRUE', 'FALSE'] do
-  begin
-    LItem := TJSONObject.Create();
-    LItem.AddPair('label', LConstName);
-    LItem.AddPair('kind', TJSONNumber.Create(21));
-    LItem.AddPair('insertText', LConstName);
-    LItems.Add(LItem);
-  end;
+  for LConstName in ['True', 'False'] do
+    AddCompletionItem(LConstName, 21);
 
   Result := LItems;
 end;

@@ -911,7 +911,13 @@ var
 begin
   EmitLine(sfSource, ANode);
   LCond := EmitExpression(ANode.Condition);
-  EmitLnFmt(sfSource, 'if (%s) {', [LCond]);
+  // These node types already produce wrapped output - don't double-wrap
+  if (ANode.Condition is TBinaryOpNode) or
+     (ANode.Condition is TUnaryOpNode) or
+     (ANode.Condition is TDerefNode) then
+    EmitLnFmt(sfSource, 'if %s {', [LCond])
+  else
+    EmitLnFmt(sfSource, 'if (%s) {', [LCond]);
 
   IncIndent(sfSource);
   if ANode.ThenBlock <> nil then
@@ -935,7 +941,13 @@ var
 begin
   EmitLine(sfSource, ANode);
   LCond := EmitExpression(ANode.Condition);
-  EmitLnFmt(sfSource, 'while (%s) {', [LCond]);
+  // These node types already produce wrapped output - don't double-wrap
+  if (ANode.Condition is TBinaryOpNode) or
+     (ANode.Condition is TUnaryOpNode) or
+     (ANode.Condition is TDerefNode) then
+    EmitLnFmt(sfSource, 'while %s {', [LCond])
+  else
+    EmitLnFmt(sfSource, 'while (%s) {', [LCond]);
 
   IncIndent(sfSource);
   if ANode.Body <> nil then
@@ -994,7 +1006,13 @@ begin
   DecIndent(sfSource);
 
   LCond := EmitExpression(ANode.Condition);
-  EmitLnFmt(sfSource, '} while (!(%s));', [LCond]);
+  // These node types already produce wrapped output - don't double-wrap
+  if (ANode.Condition is TBinaryOpNode) or
+     (ANode.Condition is TUnaryOpNode) or
+     (ANode.Condition is TDerefNode) then
+    EmitLnFmt(sfSource, '} while (!%s);', [LCond])
+  else
+    EmitLnFmt(sfSource, '} while (!(%s));', [LCond]);
 end;
 
 procedure TCodeGen.EmitCase(const ANode: TCaseNode);
@@ -1681,9 +1699,61 @@ function TCodeGen.EmitTypeCast(const ANode: TTypeCastNode): string;
 var
   LExpr: string;
   LType: string;
+  LUpper: string;
+  LExprType: TTypeSymbol;
+  LExprTypeName: string;
+  LVarSymbol: TSymbol;
+  LVarNode: TVarDeclNode;
 begin
   LExpr := EmitExpression(ANode.Expr);
   LType := TypeToCpp(ANode.TypeName);
+  LUpper := UpperCase(ANode.TypeName);
+
+  // Special handling for String() casts - use std::to_string for numeric types
+  if LUpper = 'STRING' then
+  begin
+    // Check the source expression's type
+    LExprType := TTypeSymbol(ANode.Expr.ResolvedType);
+    if LExprType <> nil then
+      LExprTypeName := UpperCase(LExprType.SymbolName)
+    else
+      LExprTypeName := '';
+
+    // If resolved type not available, try to look up variable type
+    if (LExprTypeName = '') and (ANode.Expr is TIdentifierNode) then
+    begin
+      LVarSymbol := FSymbols.Lookup(TIdentifierNode(ANode.Expr).IdentName);
+      if (LVarSymbol <> nil) and (LVarSymbol.Node is TVarDeclNode) then
+      begin
+        LVarNode := TVarDeclNode(LVarSymbol.Node);
+        LExprTypeName := UpperCase(LVarNode.TypeName);
+      end;
+    end;
+
+    // Use std::to_string for numeric types
+    if (LExprTypeName = 'INTEGER') or (LExprTypeName = 'UINTEGER') or
+       (LExprTypeName = 'FLOAT') or (LExprTypeName = 'DOUBLE') or
+       (LExprTypeName = 'REAL') or (LExprTypeName = 'BOOLEAN') then
+    begin
+      Result := Format('std::to_string(%s)', [LExpr]);
+      Exit;
+    end;
+
+    // For char* / pointer types, use std::string constructor
+    if (Pos('POINTER', LExprTypeName) > 0) then
+    begin
+      Result := Format('std::string(reinterpret_cast<const char*>(%s))', [LExpr]);
+      Exit;
+    end;
+
+    // Direct char* variable - wrap with std::string
+    if (LExprTypeName = 'CHAR') then
+    begin
+      Result := Format('std::string(%s)', [LExpr]);
+      Exit;
+    end;
+  end;
+
   Result := Format('static_cast<%s>(%s)', [LType, LExpr]);
 end;
 
@@ -1818,6 +1888,10 @@ begin
     Result := 'uint64_t'
   else if LUpper = 'FLOAT' then
     Result := 'double'
+  else if LUpper = 'DOUBLE' then
+    Result := 'double'
+  else if LUpper = 'REAL' then
+    Result := 'double'
   else if LUpper = 'STRING' then
     Result := 'std::string'
   else if LUpper = 'SET' then
@@ -1903,16 +1977,19 @@ var
   LChar: Char;
   LNextChar: Char;
 begin
-  // Escape backslashes for C++ output.
-  // Only pass through hex escapes (\x) and octal (\0-7) which are intentional.
-  // All other backslashes get escaped to prevent accidental interpretation
-  // of things like \f in 'C:\folder' as form feed.
+  // Escape special characters for C++ string output.
+  // Handles: double quotes, backslashes (with exceptions for hex/octal escapes)
   Result := '';
   I := 1;
   while I <= Length(AValue) do
   begin
     LChar := AValue[I];
-    if LChar = '\' then
+    if LChar = '"' then
+    begin
+      // Escape double quotes for C++ string literals
+      Result := Result + '\"';
+    end
+    else if LChar = '\' then
     begin
       if I < Length(AValue) then
       begin

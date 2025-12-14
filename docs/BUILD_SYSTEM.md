@@ -6,13 +6,14 @@ Compilation, targets, and build options.
 
 1. [Overview](#overview)
 2. [Command Line](#command-line)
-3. [Project Structure](#project-structure)
-4. [Module Types](#module-types)
-5. [Optimization Levels](#optimization-levels)
-6. [Target Platforms](#target-platforms)
-7. [Linking](#linking)
-8. [Directives](#directives)
-9. [Troubleshooting](#troubleshooting)
+3. [Using Zig Directly](#using-zig-directly)
+4. [Project Structure](#project-structure)
+5. [Module Types](#module-types)
+6. [Optimization Levels](#optimization-levels)
+7. [Target Platforms](#target-platforms)
+8. [Linking](#linking)
+9. [Directives](#directives)
+10. [Troubleshooting](#troubleshooting)
 
 ## Overview
 
@@ -114,6 +115,73 @@ myra clean
 myra zig version
 myra zig cc -c myfile.c
 ```
+
+## Using Zig Directly
+
+The `myra zig` command passes arguments directly to the bundled Zig compiler. This is invaluable for building C libraries, compiling individual files, or using any Zig functionality.
+
+### Syntax
+
+```bash
+myra zig <arguments>
+```
+
+This is equivalent to running `zig <arguments>` directly, using Myra's bundled Zig installation.
+
+### Building C Libraries
+
+Many C libraries (like SQLite) can't be included directly via `#source_file` because Myra applies C++23 flags to all source files. Instead, build them as static libraries:
+
+```bash
+# Build SQLite as a static library
+cd path/to/sqlite
+myra zig build-lib sqlite3.c -OReleaseFast -lc
+```
+
+This creates `sqlite3.lib` (Windows) or `libsqlite3.a` (Linux/macOS).
+
+Then link it in your Myra project:
+
+```myra
+#include_path 'path/to/sqlite'
+#library_path 'path/to/sqlite'
+#link 'sqlite3'
+#include_header '"sqlite3.h"'
+```
+
+### Common Zig Commands
+
+| Command | Description |
+|---------|-------------|
+| `myra zig version` | Show Zig version |
+| `myra zig build-lib file.c -lc` | Build C file as static library |
+| `myra zig build-lib file.c -OReleaseFast -lc` | Build optimized static library |
+| `myra zig cc -c file.c` | Compile C file to object file |
+| `myra zig c++ -c file.cpp` | Compile C++ file to object file |
+| `myra zig targets` | List all supported cross-compilation targets |
+
+### Optimization Flags
+
+| Flag | Description |
+|------|-------------|
+| `-ODebug` | Debug build (default) |
+| `-OReleaseSafe` | Optimized with safety checks |
+| `-OReleaseFast` | Maximum optimization |
+| `-OReleaseSmall` | Optimize for size |
+
+### Example: Building a Complete C Library
+
+```bash
+# Navigate to library source
+cd myra/bin/res/libs/sqlite
+
+# Build optimized static library
+myra zig build-lib sqlite3.c -OReleaseFast -lc
+
+# Result: sqlite3.lib (Windows)
+```
+
+Now your Myra project can link against it without C++23 flag conflicts.
 
 ### Typical Workflow
 
@@ -396,6 +464,20 @@ end.
 #abi C
 #abi CPP
 ```
+
+### C/C++ Source Integration
+
+```myra
+// Include C/C++ source files directly in compilation
+#source_path 'path/to/sources'
+#source_file 'path/to/file.cpp'
+
+// Example: Include a C++ wrapper
+#source_path 'vendor/src'
+#source_file 'vendor/src/wrapper.cpp'
+```
+
+**Note:** When including C source files (`.c`), the build system applies C++23 flags which causes errors. For C libraries like SQLite, build them as static libraries first (see [Using Zig Directly](#using-zig-directly)).
 
 ### Unit Test Mode
 
