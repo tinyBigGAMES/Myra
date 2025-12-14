@@ -895,6 +895,11 @@ begin
     EmitInherited(TInheritedCallNode(AStmt))
   else if AStmt is TCppBlockNode then
     EmitCppBlock(TCppBlockNode(AStmt))
+  else if AStmt is TCppPassthroughNode then
+  begin
+    EmitLine(sfSource, AStmt);
+    EmitLn(sfSource, TCppPassthroughNode(AStmt).RawText + ';');
+  end
   else if AStmt is TBlockNode then
   begin
     EmitLn(sfSource, '{');

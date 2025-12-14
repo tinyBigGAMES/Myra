@@ -5,6 +5,9 @@ All notable changes to the Myra programming language.
 ## [1.0.0-alpha.2]
 
 ### Added
+- Dear ImGui library bundled in `libs/imgui`
+- rlImGui library bundled in `libs/rlimgui` (Dear ImGui backend for raylib)
+- New demo project: `imgui_demo` - demonstrates Dear ImGui integration with raylib using rlImGui backend
 - SQLite library bundled in `libs/sqlite` with header, source, and build script
 - New demo project: `sqlite_demo` - demonstrates SQLite database integration with C library interop
 - New demo project: `raylib_3d_camera` - demonstrates 3D graphics with first-person camera controls
@@ -21,6 +24,7 @@ All notable changes to the Myra programming language.
   - Correct C++ passthrough: `#startcpp`/`#endcpp`
 
 ### Fixed
+- Code generation: C++ passthrough statements (like `ImGui::Text(...)`) inside Myra control structures now properly emitted
 - Code generation: Fixed double parentheses in `if`/`while`/`repeat` conditions that triggered clang warning
 - Code generation: Double quotes in string literals now properly escaped for C++
 - Code generation: `String()` casts on numeric types now emit `std::to_string()` instead of invalid `static_cast<std::string>()`
