@@ -47,6 +47,11 @@ type
     function ParseTypeName(): string; overload;
     function ParseTypeName(out ALine: Integer; out AColumn: Integer): string; overload;
 
+    // Helpers for "if it's not Myra, it's C++" detection
+    function IsMyraStatementContinuation(): Boolean;
+    function IsMyraDeclarationContinuation(): Boolean;
+    function IsMyraBlockTerminator(): Boolean;
+
     constructor Create(); override;
     destructor Destroy(); override;
 
@@ -141,6 +146,40 @@ begin
   FCurrentEmitTarget := ctSource;
 
   Result := ParseModule(Self);
+end;
+
+function TParser.IsMyraStatementContinuation(): Boolean;
+var
+  LPeekKind: TTokenKind;
+begin
+  // Statement context: identifier followed by what?
+  // Valid Myra: . ( [ ^ := ; block-terminators EOF
+  // Anything else = C++ passthrough
+  LPeekKind := Peek().Kind;
+  Result := LPeekKind in [tkDot, tkLParen, tkLBracket, tkCaret, tkAssign,
+                          tkSemicolon, tkEnd, tkElse, tkUntil, tkExcept, tkFinally, tkEOF];
+end;
+
+function TParser.IsMyraDeclarationContinuation(): Boolean;
+var
+  LPeekKind: TTokenKind;
+begin
+  // Declaration context: identifier followed by what?
+  // Valid Myra: : = ; (for type annotation, const def, end of decl)
+  // NOT Myra: identifier identifier (e.g., "inline float")
+  LPeekKind := Peek().Kind;
+  Result := LPeekKind in [tkColon, tkEquals, tkSemicolon, tkEOF];
+end;
+
+function TParser.IsMyraBlockTerminator(): Boolean;
+var
+  LNextKind: TTokenKind;
+begin
+  // Terminator context: is current end/else/etc a real Myra terminator?
+  // Valid Myra after terminator: ; . EOF another-terminator
+  // Anything else (like '(' for End()) = C++, continue consuming
+  LNextKind := Peek().Kind;
+  Result := LNextKind in [tkSemicolon, tkDot, tkEOF, tkEnd, tkElse, tkUntil, tkExcept, tkFinally];
 end;
 
 function TParser.ParseTypeName(): string;

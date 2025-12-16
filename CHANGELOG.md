@@ -5,6 +5,7 @@ All notable changes to the Myra programming language.
 ## [1.0.0-alpha.2]
 
 ### Added
+- Clean button in Myra Edit editor title bar for quick project cleanup
 - Dear ImGui library bundled in `libs/imgui`
 - rlImGui library bundled in `libs/rlimgui` (Dear ImGui backend for raylib)
 - New demo project: `imgui_demo` - demonstrates Dear ImGui integration with raylib using rlImGui backend
@@ -24,6 +25,9 @@ All notable changes to the Myra programming language.
   - Correct C++ passthrough: `#startcpp`/`#endcpp`
 
 ### Fixed
+- C++ passthrough now uses whitelist approach: defines what IS Myra syntax, everything else passes through as C++
+- Myra keywords (`End`, `Else`, etc.) in C++ context now correctly pass through (e.g., `ImGui::End()`)
+- Module-level C++ declarations now work without `#startcpp` wrapper (e.g., `inline float x = 0.5f;`)
 - Code generation: C++ passthrough statements (like `ImGui::Text(...)`) inside Myra control structures now properly emitted
 - Code generation: Fixed double parentheses in `if`/`while`/`repeat` conditions that triggered clang warning
 - Code generation: Double quotes in string literals now properly escaped for C++

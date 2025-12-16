@@ -99,10 +99,14 @@ begin
   end
   else
   begin
-    // Original logic: semicolon-terminated
-    while not AParser.IsAtEnd() and (AParser.Current().Kind <> tkSemicolon) and
-          not (AParser.Current().Kind in [tkEnd, tkElse, tkUntil, tkExcept, tkFinally]) do
+    // Semicolon-terminated
+    while not AParser.IsAtEnd() and (AParser.Current().Kind <> tkSemicolon) do
     begin
+      // Check for potential Myra block terminators
+      if (AParser.Current().Kind in [tkEnd, tkElse, tkUntil, tkExcept, tkFinally]) and
+         AParser.IsMyraBlockTerminator() then
+        Break;  // Real Myra terminator, otherwise C++ - continue consuming
+      
       LLastToken := AParser.Current();
       AParser.Advance();
     end;

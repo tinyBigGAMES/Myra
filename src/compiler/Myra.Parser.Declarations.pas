@@ -215,6 +215,12 @@ begin
       LCppBlock := ParseCppBlock(AParser);
       Result.CppBlocks.Add(LCppBlock);
     end
+    else if (LToken.Kind = tkIdentifier) and not AParser.IsMyraDeclarationContinuation() then
+    begin
+      // Identifier not followed by valid Myra declaration syntax - C++ passthrough
+      LCppBlock := ParseCppPassthrough(AParser);
+      Result.CppBlocks.Add(LCppBlock);
+    end
     else
     begin
       AParser.FErrors.Add(LToken.Filename, LToken.Line, LToken.Column, esError, 'E101',

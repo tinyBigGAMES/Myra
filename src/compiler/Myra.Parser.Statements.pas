@@ -450,13 +450,8 @@ var
   LAssign: TAssignNode;
   LStartPos: Integer;
 begin
-  if (AParser.Current().Kind = tkIdentifier) and (AParser.Peek().Kind = tkIdentifier) then
-  begin
-    Result := ParseCppPassthrough(AParser);
-    Exit;
-  end;
-
-  if (AParser.Current().Kind = tkIdentifier) and (AParser.Peek().Kind = tkEquals) then
+  // If current is identifier and next is NOT valid Myra, it's C++ passthrough
+  if (AParser.Current().Kind = tkIdentifier) and not AParser.IsMyraStatementContinuation() then
   begin
     Result := ParseCppPassthrough(AParser);
     Exit;
