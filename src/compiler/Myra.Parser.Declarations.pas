@@ -987,8 +987,9 @@ var
   LVar: TVarDeclNode;
 begin
   Result := TRoutineNode.Create();
-  LToken := AParser.Current();
-  AParser.SetNodeLocation(Result, LToken);
+  try
+    LToken := AParser.Current();
+    AParser.SetNodeLocation(Result, LToken);
   Result.IsPublic := AIsPublic;
   Result.IsCExport := AParser.FCurrentABIIsC;
 
@@ -1088,6 +1089,10 @@ begin
   Result.EndLine := AParser.Current().Line;
   AParser.Expect(tkEnd);
   AParser.Expect(tkSemicolon);
+  except
+    Result.Free();
+    raise;
+  end;
 end;
 
 function ParseMethod(const AParser: TParser; const AIsPublic: Boolean): TRoutineNode;
@@ -1098,8 +1103,9 @@ var
   LFirstParam: TParamNode;
 begin
   Result := TRoutineNode.Create();
-  LToken := AParser.Current();
-  AParser.SetNodeLocation(Result, LToken);
+  try
+    LToken := AParser.Current();
+    AParser.SetNodeLocation(Result, LToken);
   Result.IsPublic := AIsPublic;
   Result.IsMethod := True;
 
@@ -1159,6 +1165,10 @@ begin
   Result.EndLine := AParser.Current().Line;
   AParser.Expect(tkEnd);
   AParser.Expect(tkSemicolon);
+  except
+    Result.Free();
+    raise;
+  end;
 end;
 
 function ParseParams(const AParser: TParser): TObjectList<TParamNode>;
@@ -1176,8 +1186,8 @@ var
   LIsConst: Boolean;
 begin
   Result := TObjectList<TParamNode>.Create();
-
-  if AParser.Current().Kind <> tkRParen then
+  try
+    if AParser.Current().Kind <> tkRParen then
   begin
     repeat
       LIsVar := False;
@@ -1211,6 +1221,10 @@ begin
 
       Result.Add(LParam);
     until not AParser.Match(tkSemicolon);
+    end;
+  except
+    Result.Free();
+    raise;
   end;
 end;
 

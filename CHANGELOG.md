@@ -5,6 +5,9 @@ All notable changes to the Myra programming language.
 ## [1.0.0-alpha.2]
 
 ### Added
+- FAQ: How to build static libraries using CMake with Myra's Zig toolchain (SDL3 example)
+- SDL3 library bundled in `libs/sdl3` (static build)
+- New demo project: `sdl3_demo` - demonstrates SDL3 integration with window rendering, HSV color cycling, and animated graphics
 - Clean button in Myra Edit editor title bar for quick project cleanup
 - Dear ImGui library bundled in `libs/imgui`
 - rlImGui library bundled in `libs/rlimgui` (Dear ImGui backend for raylib)
@@ -25,6 +28,7 @@ All notable changes to the Myra programming language.
   - Correct C++ passthrough: `#startcpp`/`#endcpp`
 
 ### Fixed
+- Memory leaks in compiler parser when syntax errors occur (added exception cleanup to `ParseRoutine`, `ParseMethod`, `ParseParamsInner`)
 - C++ passthrough now uses whitelist approach: defines what IS Myra syntax, everything else passes through as C++
 - Myra keywords (`End`, `Else`, etc.) in C++ context now correctly pass through (e.g., `ImGui::End()`)
 - Module-level C++ declarations now work without `#startcpp` wrapper (e.g., `inline float x = 0.5f;`)

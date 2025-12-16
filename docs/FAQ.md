@@ -241,6 +241,57 @@ Myra's build system applies C++23 flags to all source files, which causes errors
 
 See [Build System - Using Zig Directly](BUILD_SYSTEM.md#using-zig-directly) for more details.
 
+### How do I build a static library (like SDL3) using Myra's Zig toolchain?
+
+Myra bundles Zig-based compiler drivers in `bin\res\utils\`:
+- `zig-cc.cmd` - C compiler driver
+- `zig-cpp.cmd` - C++ compiler driver
+
+These can be used with CMake to build static libraries compatible with Myra.
+
+#### Example: Building SDL3 as a static library
+
+**Prerequisites:**
+- CMake installed
+- Ninja build system installed
+- SDL3 source from https://github.com/libsdl-org/SDL
+
+**Method 1: Command Line**
+
+```cmd
+cd path\to\SDL3\source
+mkdir build
+cd build
+
+cmake -G Ninja ^
+  -DCMAKE_C_COMPILER=C:/myra/bin/res/utils/zig-cc.cmd ^
+  -DCMAKE_CXX_COMPILER=C:/myra/bin/res/utils/zig-cpp.cmd ^
+  -DSDL_STATIC=ON ^
+  -DSDL_SHARED=OFF ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  ..
+
+ninja
+```
+
+**Method 2: CMake GUI**
+
+1. Create a `build` folder inside the SDL source directory
+2. Open CMake GUI:
+   - **Source**: SDL source folder
+   - **Build**: The `build` folder
+3. Click "Configure", select **Ninja** as the generator
+4. Set the following options:
+   - `CMAKE_C_COMPILER` = full path to `zig-cc.cmd`
+   - `CMAKE_CXX_COMPILER` = full path to `zig-cpp.cmd`
+   - `SDL_STATIC` = ON
+   - `SDL_SHARED` = OFF
+   - `CMAKE_BUILD_TYPE` = Release
+5. Click "Configure" again, then "Generate"
+6. Open a terminal in the build folder and run: `ninja`
+
+The build produces `libSDL3.a` which can be used with Myra.
+
 ### How do I debug Myra programs?
 
 Myra includes both a command-line debugger and full IDE debugging:
