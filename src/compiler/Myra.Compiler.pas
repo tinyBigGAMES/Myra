@@ -27,6 +27,14 @@ uses
   Myra.Symbols,
   Myra.AST;
 
+const
+  MYRA_MAJOR      = '1';
+  MYRA_MINOR      = '0';
+  MYRA_PATCH      = '0';
+  MYRA_PRERELEASE = '-alpha.2';
+  MYRA_VERSION    = MYRA_MAJOR + '.' + MYRA_MINOR + '.' + MYRA_PATCH +
+                    MYRA_PRERELEASE;
+
 type
   { TOutputCallback }
   TOutputCallback = reference to procedure(const AText: string);
