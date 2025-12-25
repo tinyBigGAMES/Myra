@@ -3,8 +3,6 @@
 ![Myra](media/logo.png)
 
 [![Discord](https://img.shields.io/discord/754884471324672040?style=for-the-badge&logo=discord&label=Discord)](https://discord.gg/tPWjMwK)
-[![Reddit](https://img.shields.io/badge/Reddit-r%2Fmyralang-FF4500?style=for-the-badge&logo=reddit&logoColor=white)](https://www.reddit.com/r/myralang/)
-[![Facebook](https://img.shields.io/badge/Facebook-myralang-1877F2?style=for-the-badge&logo=facebook&logoColor=white)](https://www.facebook.com/groups/myralang)
 [![Follow on Bluesky](https://img.shields.io/badge/Bluesky-tinyBigGAMES-blue?style=for-the-badge&logo=bluesky)](https://bsky.app/profile/tinybiggames.com)
 
 A minimal systems programming language that compiles to native executables via C++23.
@@ -411,8 +409,6 @@ Myra is licensed under the **Apache License 2.0**. See [LICENSE](https://github.
 - [Documentation](docs/README.md)
 - [Website](https://myralang.org)
 - [Discord](https://discord.gg/tPWjMwK)
-- [Reddit](https://www.reddit.com/r/myralang/)
-- [Facebook](https://www.facebook.com/groups/myralang)
 - [Bluesky](https://bsky.app/profile/tinybiggames.com)
 - [YouTube](https://youtube.com/tinyBigGAMES)
 
